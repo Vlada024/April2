@@ -322,7 +322,10 @@
 	import { ref } from "vue";
 	import { userStore } from "../stores/userStore";
 	import { toast } from "vue3-toastify";
+	import { useRouter, useRoute } from "vue-router";
 	import "vue3-toastify/dist/index.css";
+	const route = useRoute();
+	const router = useRouter();
 	const userInfo = userStore();
 	const ownedPetsDescription = ref("");
 	const allergiesValue = ref("");
@@ -401,14 +404,15 @@
 
 		axios
 			.post("/user/addPreferences", preferenceData, {
-				withCredentials: false,
+				withCredentials: true,
 			})
 			.then(function (response) {
-				//console.log(response.data);
 				toast.success(response.data.message, {
 					position: toast.POSITION.BOTTOM_RIGHT,
 					theme: "colored",
 				});
+				userInfo.IsPreferenceFilled = true;
+				router.push("/profile");
 			})
 			.catch(function (error) {
 				toast.error(error.response.data.message, {

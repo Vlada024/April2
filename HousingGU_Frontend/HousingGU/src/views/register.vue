@@ -10,6 +10,13 @@
 						<input type="text" class="form-control" id="Username" placeholder="Enter your username" v-model="formUserName" />
 					</div>
 					<div class="mb-3">
+						<label class="form-label">User Type</label>
+						<div>
+							<label> <input type="radio" value="Roomie" v-model="selectedUser" /> Roomie </label>
+							<label> <input type="radio" value="Landlord" v-model="selectedUser" /> Landlord </label>
+						</div>
+					</div>
+					<div class="mb-3">
 						<label for="email" class="form-label">Email</label>
 						<input type="email" class="form-control" id="email" placeholder="Enter your email" v-model="formEmail" />
 					</div>
@@ -23,7 +30,18 @@
 					</div>
 					<div class="mb-3">
 						<label for="profilePicture" class="form-label">Profile Picture</label>
-						<input type="file" id="profilePicture" @change="handleFileUpload" accept="image/*" />
+						<input type="file" class="form-control" id="profilePicture" @change="handleFileUpload" accept="image/*" />
+					</div>
+
+					<div v-if="selectedUser === 'Roomie'">
+						<div class="mb-3">
+							<label for="aboutMe" class="form-label">About Me</label>
+							<textarea class="form-control" id="aboutMe" placeholder="Enter something about yourself" v-model="formAboutMe"></textarea>
+						</div>
+						<div class="mb-3">
+							<label for="description" class="form-label">Description</label>
+							<textarea class="form-control" id="description" placeholder="Enter a description" v-model="formDescription"></textarea>
+						</div>
 					</div>
 					<button type="button" @click="register()" class="btn btn-primary">Register</button>
 
@@ -53,8 +71,10 @@
 	const formEmail = ref("");
 	const formPhone = ref("");
 	const formVisible = ref(false);
-	const profilePicture = ref(null); // Holds the uploaded profile picture file
-
+	const profilePicture = ref(null);
+	const selectedUser = ref("Landlord");
+	const formAboutMe = ref("");
+	const formDescription = ref("");
 	onMounted(() => {
 		formVisible.value = true;
 	});
@@ -84,13 +104,17 @@
 		registerCred.append("email", formEmail.value);
 		registerCred.append("password", formPassword.value);
 		registerCred.append("phoneNumber", formPhone.value);
-		registerCred.append("profilePicture", profilePicture.value); // Append the file to the FormData
-
+		registerCred.append("profilePicture", profilePicture.value);
+		registerCred.append("type", selectedUser.value);
+		if (selectedUser.value == "Roomie") {
+			registerCred.append("aboutMe", formAboutMe.value);
+			registerCred.append("desc", formDescription.value);
+		}
 		await axios
 			.post("/signup", registerCred, {
-				withCredentials: false,
+				withCredentials: true,
 				headers: {
-					"Content-Type": "multipart/form-data", // Set the content type to multipart form data
+					"Content-Type": "multipart/form-data",
 				},
 			})
 			.then(function (response) {
@@ -132,13 +156,21 @@
 </script>
 
 <style scoped>
+	form {
+		max-height: 85vh;
+		width: 45vw;
+		overflow-y: auto;
+		margin-top: 3rem;
+	}
 	.LogoImg {
 		width: 20vw;
+		margin-top: 2rem;
 	}
 	.register-container {
 		display: flex;
-		height: 90vh;
+		height: 95vh;
 		overflow-x: hidden;
+		overflow-y: auto;
 	}
 	.register-container .register-form {
 		flex: 0 0 50%;
@@ -146,17 +178,7 @@
 		display: flex;
 		justify-content: center;
 		align-items: center;
-		padding: 50px;
-	}
-
-	.register-container .register-form form {
-		max-width: 400px;
-		width: 100%;
-	}
-
-	.register-container .register-form h2 {
-		text-align: center;
-		margin-bottom: 30px;
+		padding: 4rem;
 	}
 
 	.register-container .dashboard {
@@ -182,6 +204,21 @@
 		animation: slideInFromLeft 0.6s ease-in-out forwards;
 	}
 
+	::-webkit-scrollbar {
+		width: 10px;
+	}
+
+	::-webkit-scrollbar-track {
+		background: #f1f1f1;
+	}
+
+	::-webkit-scrollbar-thumb {
+		background: #888;
+	}
+
+	::-webkit-scrollbar-thumb:hover {
+		background: #555;
+	}
 	@keyframes slideInFromLeft {
 		from {
 			transform: translateX(-140%);

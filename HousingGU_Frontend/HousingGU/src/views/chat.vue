@@ -3,7 +3,7 @@
 		<div class="chat-container">
 			<div class="chat-messages">
 				<div v-for="message in messages" :key="message.id" class="message-container">
-					<div class="message" :class="{ 'from-me': message.fromMe, 'from-others': !message.fromMe }">
+					<div :class="['message', message.senderId === userInfo.userId ? 'from-me' : 'from-others']">
 						<div class="message-content">{{ message.content }}</div>
 					</div>
 				</div>
@@ -23,7 +23,6 @@
 		height: 90vh;
 		background-color: #f5f5f5;
 		margin-top: 10rem;
-
 		box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 	}
 
@@ -41,28 +40,30 @@
 
 	.message-container {
 		display: flex;
-		justify-content: flex-end;
+		justify-content: flex-start;
 		margin-bottom: 1rem;
 	}
 
 	.message {
 		padding: 0.8rem;
-		max-width: 70%;
 		border-radius: 0.8rem;
 		word-wrap: break-word;
 	}
+
 	.message-content {
 		word-wrap: break-word;
 	}
 
 	.from-me {
-		align-self: flex-end;
+		margin-left: auto; /* Push messages from the current user to the right */
 		background-color: #dcf8c6;
+		color: #000;
 	}
 
 	.from-others {
-		align-self: flex-start;
+		margin-right: auto; /* Push messages from others to the left */
 		background-color: #f8f9fa;
+		color: #000;
 	}
 
 	.chat-input-container {
@@ -75,7 +76,7 @@
 		flex: 1;
 		padding: 0.8rem;
 		border-radius: 0.4rem;
-		border: none;
+		border: 1px solid #ddd;
 	}
 
 	.send-button {
@@ -90,32 +91,69 @@
 		border-radius: 5px;
 		overflow: hidden;
 	}
-
-	.chat-input {
-		border: 1px solid #ddd;
-	}
 </style>
 
 <script setup>
 	import { ref, reactive, onMounted } from "vue";
-	import { io } from "socket.io-client";
-	const messages = reactive([]);
-	const newMessage = ref("");
+	import axios from "axios";
+	import { useRoute } from "vue-router";
+	import { useRouter } from "vue-router";
+	import io from "socket.io-client";
+	import { userStore } from "../stores/userStore";
+	import { toast } from "vue3-toastify";
+	const router = useRouter();
+	const userInfo = userStore();
+	const route = useRoute();
+	const chatId = route.params.chatId;
+	const userId = userInfo.userId; // Replace with the actual user ID
 
 	const socket = io("http://localhost:3000");
+	const messages = ref([]);
+	const newMessage = ref("");
 
-	const sendMessage = () => {
-		const message = newMessage.value.trim();
-		if (message !== "") {
-			socket.emit("chatMessage", message);
+	onMounted(() => {
+		if (chatId) {
+			joinChat(chatId);
+		} else {
+			console.error("Invalid chat ID.");
+		}
+	});
+
+	// Join a chat room
+	async function joinChat(chatId) {
+		try {
+			socket.emit("join-chat", chatId);
+			socket.on("chat-messages", (chatMessages) => {
+				if (chatMessages == "empty") {
+					toast.error("Chat ID is Wrong Redircting to Homepage", {
+						position: toast.POSITION.BOTTOM_RIGHT,
+						theme: "colored",
+					});
+					setTimeout(() => {
+						router.push("/");
+					}, 2000);
+				} else {
+					messages.value = chatMessages;
+				}
+			});
+			socket.on("new-message", (message) => {
+				messages.value.push(message);
+			});
+		} catch (error) {
+			console.error("Error joining chat:", error);
+		}
+	}
+
+	// Send a message
+	function sendMessage() {
+		if (newMessage.value.trim() !== "") {
+			const messageData = {
+				content: newMessage.value,
+				senderId: userId,
+				chatId,
+			};
+			socket.emit("send-message", messageData);
 			newMessage.value = "";
 		}
-	};
-
-	const receiveMessage = (message) => {
-		messages.push({ id: Date.now(), content: message, fromMe: false });
-	};
-
-	socket.on("chatMessage", receiveMessage);
-	onMounted(() => {});
+	}
 </script>

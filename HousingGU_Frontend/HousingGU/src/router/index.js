@@ -6,6 +6,7 @@ import roomatePreference from "../views/roomatePreference.vue";
 import Profile from "../views/Profile.vue";
 import { userStore } from "../stores/userStore";
 import Chat from "../views/chat.vue";
+import roomieSearch from "../views/roomieSearch.vue";
 const router = createRouter({
 	history: createWebHistory(import.meta.env.BASE_URL),
 	routes: [
@@ -40,10 +41,16 @@ const router = createRouter({
 			component: Profile,
 		},
 		{
-			path: "/chat/:friendId",
+			path: "/chat/:chatId",
 			name: "Chat",
 			meta: { guest: false },
 			component: Chat,
+		},
+		{
+			path: "/roomieSearch",
+			name: "roomieSearch",
+			meta: { guest: false },
+			component: roomieSearch,
 		},
 	],
 });

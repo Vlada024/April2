@@ -22,12 +22,12 @@
 		};
 		await axios
 			.post("/login", loginCred, {
-				withCredentials: false,
+				withCredentials: true,
 			})
 			.then(function (response) {
 				const { data } = response;
 				if (data.success) {
-					userInfo.setUserInfo(data.user.username, data.user.admin, data.user.email, data.user.phoneNumber, data.token, data.user.profilePicture);
+					userInfo.setUserInfo(data.user.username, data.user.admin, data.user.email, data.user.phoneNumber, data.token, data.user.profilePicture, data.user.id, data.user.PreferenceFilled);
 					toast.success("Sign in successfully", {
 						position: toast.POSITION.BOTTOM_RIGHT,
 						theme: "colored",
@@ -43,7 +43,7 @@
 				}
 			})
 			.catch(function (error) {
-				console.log(error);
+				//console.log(error + "Error heeeeeeeeeeeeeeeeeeeeeeeere");
 				if ((error.name = "AxiosError")) {
 					toast.error(error.response.data.message, {
 						position: toast.POSITION.BOTTOM_RIGHT,

@@ -28,7 +28,7 @@
 							<router-link class="nav-link" to="/"><i class="bi bi-house-door sp-icon"></i> Home</router-link>
 						</li>
 						<li class="nav-item">
-							<router-link class="nav-link" to="/search"><i class="bi bi-search sp-icon"></i> Search</router-link>
+							<router-link class="nav-link" to="/roomieSearch"><i class="bi bi-search sp-icon" v-if="userInfo.loggedIn == true"></i> Search for Roomie</router-link>
 						</li>
 					</ul>
 					<ul class="navbar-nav">
@@ -36,7 +36,8 @@
 							<button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false"><i class="bi bi-person-fill sp-icon"></i>{{ userInfo.userName }}</button>
 							<ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
 								<li>
-									<router-link class="nav-link" to="/profile"> User Profile</router-link>
+									<router-link class="nav-link" to="/profile" v-if="userInfo.IsPreferenceFilled"> User Profile</router-link>
+									<router-link class="nav-link" to="/roomatePreference" v-if="userInfo.IsPreferenceFilled == false"> Preference</router-link>
 								</li>
 								<li>
 									<button class="nav-link" @click="logout()">logout</button>
