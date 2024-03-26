@@ -200,6 +200,7 @@
 						theme: "colored",
 					});
 					loadMyProfile();
+					loadFriendRequests();
 				});
 		} catch (error) {
 			console.error("Error saving profile changes:", error);

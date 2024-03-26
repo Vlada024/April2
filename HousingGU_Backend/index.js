@@ -7,6 +7,7 @@ const port = 5555;
 const secretKey = "SAJKDHASJKDHAjsdahnasd!@#!@asdjkabJBAS";
 const jwt = require("jsonwebtoken");
 require("./routes/chating");
+//
 //require("./routes/createUsers"); // uncomment to create users
 app.use(
 	cors({

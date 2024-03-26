@@ -15,7 +15,7 @@ const io = socketIO(server, {
 io.on("connection", (socket) => {
 	socket.on("join-chat", async (chatId) => {
 		try {
-			const chat = await prisma.chat.findMany({
+			const chat = await prisma.chat.findUnique({
 				where: {
 					id: chatId,
 				},
@@ -34,7 +34,7 @@ io.on("connection", (socket) => {
 						sender: true,
 					},
 				});
-				socket.emit("chat-messages", messages);
+				socket.emit("chat-messages", { chatMessages: messages, chatName: chat.name });
 			}
 		} catch (error) {
 			console.error("Error joining chat:", error);

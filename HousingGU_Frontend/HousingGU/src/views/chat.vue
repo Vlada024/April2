@@ -1,5 +1,6 @@
 <template>
 	<div class="container">
+		<h2 style="text-align: center">{{ chatRoomName }}</h2>
 		<div class="chat-container">
 			<div class="chat-messages">
 				<div v-for="message in messages" :key="message.id" class="message-container">
@@ -106,7 +107,7 @@
 	const route = useRoute();
 	const chatId = route.params.chatId;
 	const userId = userInfo.userId; // Replace with the actual user ID
-
+	const chatRoomName = ref("");
 	const socket = io("http://localhost:3000");
 	const messages = ref([]);
 	const newMessage = ref("");
@@ -123,7 +124,7 @@
 	async function joinChat(chatId) {
 		try {
 			socket.emit("join-chat", chatId);
-			socket.on("chat-messages", (chatMessages) => {
+			socket.on("chat-messages", ({ chatMessages, chatName }) => {
 				if (chatMessages == "empty") {
 					toast.error("Chat ID is Wrong Redircting to Homepage", {
 						position: toast.POSITION.BOTTOM_RIGHT,
@@ -133,6 +134,7 @@
 						router.push("/");
 					}, 2000);
 				} else {
+					chatRoomName.value = chatName;
 					messages.value = chatMessages;
 				}
 			});
