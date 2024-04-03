@@ -12,9 +12,10 @@ export const userStore = defineStore("userStore", () => {
 	const token = ref("");
 	const profilePicture = ref("");
 	const IsPreferenceFilled = ref(false);
+	const type = ref("");
 	setUserFromStorage();
 
-	function setUserInfo(name, isAdminBool, givenEmail, phone, JWTtoken, givenProfilePicturePath, givenUserId, PreferenceFilled) {
+	function setUserInfo(name, isAdminBool, givenEmail, phone, JWTtoken, givenProfilePicturePath, givenUserId, PreferenceFilled, givenType) {
 		let checkUserInfo = localStorage.getItem(userCred);
 		if (checkUserInfo === null || checkUserInfo === undefined || checkUserInfo === "null") {
 			userName.value = name;
@@ -26,6 +27,7 @@ export const userStore = defineStore("userStore", () => {
 			token.value = JWTtoken;
 			profilePicture.value = givenProfilePicturePath;
 			IsPreferenceFilled.value = PreferenceFilled;
+			type.value = givenType;
 			axios.defaults.headers.common["Authorization"] = `Bearer ${token.value}`;
 			localStorage.setItem(userCred, JSON.stringify(userInfo()));
 		} else {
@@ -48,6 +50,7 @@ export const userStore = defineStore("userStore", () => {
 			token.value = userInfoInStorage.token;
 			profilePicture.value = userInfoInStorage.profilePicture;
 			IsPreferenceFilled.value = userInfoInStorage.IsPreferenceFilled;
+			type.value = userInfoInStorage.type;
 			axios.defaults.headers.common["Authorization"] = `Bearer ${token.value}`;
 		}
 	}
@@ -66,6 +69,7 @@ export const userStore = defineStore("userStore", () => {
 		token.value = "";
 		profilePicture.value = "";
 		IsPreferenceFilled.value = false;
+		type.value = "";
 		axios.defaults.headers.common["Authorization"] = `Bearer `;
 	}
 
@@ -80,9 +84,10 @@ export const userStore = defineStore("userStore", () => {
 			token: token.value,
 			profilePicture: profilePicture.value,
 			IsPreferenceFilled: IsPreferenceFilled.value,
+			type: type.value,
 		};
 		return userCred;
 	}
 
-	return { userName, userId, isAdmin, loggedIn, email, phoneNumber, token, profilePicture, IsPreferenceFilled, setUserInfo, setUserFromStorage, logOutUser, userInfo };
+	return { userName, userId, isAdmin, loggedIn, email, phoneNumber, token, profilePicture, IsPreferenceFilled, type, setUserInfo, setUserFromStorage, logOutUser, userInfo };
 });

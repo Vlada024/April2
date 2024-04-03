@@ -27,8 +27,8 @@
 						<li class="nav-item">
 							<router-link class="nav-link" to="/"><i class="bi bi-house-door sp-icon"></i> Home</router-link>
 						</li>
-						<li class="nav-item">
-							<router-link class="nav-link" to="/roomieSearch"><i class="bi bi-search sp-icon" v-if="userInfo.loggedIn == true"></i> Search for Roomie</router-link>
+						<li class="nav-item" v-if="userInfo.loggedIn == true && userInfo.type == 'Roomie'">
+							<router-link class="nav-link" to="/roomieSearch"><i class="bi bi-search sp-icon"></i> Search for Roomie</router-link>
 						</li>
 					</ul>
 					<ul class="navbar-nav">
@@ -36,8 +36,9 @@
 							<button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false"><i class="bi bi-person-fill sp-icon"></i>{{ userInfo.userName }}</button>
 							<ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
 								<li>
-									<router-link class="nav-link" to="/profile" v-if="userInfo.IsPreferenceFilled"> User Profile</router-link>
-									<router-link class="nav-link" to="/roomatePreference" v-if="userInfo.IsPreferenceFilled == false"> Preference</router-link>
+									<router-link class="nav-link" to="/profile" v-if="userInfo.IsPreferenceFilled || userInfo.type == 'Roomie'"> User Profile</router-link>
+									<router-link class="nav-link" to="/landlord-profile" v-if="userInfo.type == 'Landlord'"> User Profile</router-link>
+									<router-link class="nav-link" to="/roomatePreference" v-if="userInfo.IsPreferenceFilled == false && userInfo.type == 'Roomie'"> Preference</router-link>
 								</li>
 								<li>
 									<button class="nav-link" @click="logout()">logout</button>

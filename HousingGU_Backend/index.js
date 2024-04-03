@@ -7,8 +7,8 @@ const port = 5555;
 const secretKey = "SAJKDHASJKDHAjsdahnasd!@#!@asdjkabJBAS";
 const jwt = require("jsonwebtoken");
 require("./routes/chating");
-//
-//require("./routes/createUsers"); // uncomment to create users
+
+require("./routes/createUsers"); // uncomment to create users
 app.use(
 	cors({
 		origin: "http://localhost:5173", // Replace with the URL of your front-end application

@@ -349,6 +349,7 @@ async function getMatchingUsers(userId) {
 				id: {
 					not: userId,
 				},
+				PreferenceFilled: true,
 			},
 			include: {
 				Preference: true,

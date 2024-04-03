@@ -22,8 +22,9 @@
 		display: flex;
 		flex-direction: column;
 		height: 90vh;
-		background-color: #f5f5f5;
-		margin-top: 10rem;
+		background-color: rgba(213, 169, 248, 0.233);
+		margin-top: 6rem;
+		margin-bottom: 2rem;
 		box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 	}
 
@@ -32,6 +33,7 @@
 		display: flex;
 		flex-direction: column;
 		padding: 1rem;
+		margin-bottom: 1rem;
 	}
 
 	.chat-messages {
@@ -124,7 +126,7 @@
 	async function joinChat(chatId) {
 		try {
 			socket.emit("join-chat", chatId);
-			socket.on("chat-messages", ({ chatMessages, chatName }) => {
+			socket.on("chat-messages", ({ chatMessages, chatName, RequestedToName, RequestedByName }) => {
 				if (chatMessages == "empty") {
 					toast.error("Chat ID is Wrong Redircting to Homepage", {
 						position: toast.POSITION.BOTTOM_RIGHT,
@@ -134,7 +136,12 @@
 						router.push("/");
 					}, 2000);
 				} else {
-					chatRoomName.value = chatName;
+					if (RequestedByName == userInfo.userName) {
+						chatRoomName.value = RequestedToName;
+					} else {
+						chatRoomName.value = RequestedByName;
+					}
+
 					messages.value = chatMessages;
 				}
 			});

@@ -27,17 +27,22 @@
 			.then(function (response) {
 				const { data } = response;
 				if (data.success) {
-					userInfo.setUserInfo(data.user.username, data.user.admin, data.user.email, data.user.phoneNumber, data.token, data.user.profilePicture, data.user.id, data.user.PreferenceFilled);
+					console.log(data.user);
+					userInfo.setUserInfo(data.user.username, data.user.admin, data.user.email, data.user.phoneNumber, data.token, data.user.profilePicture, data.user.id, data.user.PreferenceFilled, data.user.type);
 					toast.success("Sign in successfully", {
 						position: toast.POSITION.BOTTOM_RIGHT,
 						theme: "colored",
 					});
 					axios.defaults.headers.common["Authorization"] = `Bearer ${data.token}`; //enable JWT Token
 					setTimeout(() => {
-						if (data.user.PreferenceFilled == false) {
+						if (data.user.PreferenceFilled == false && data.user.type == "Roomie") {
 							router.push("/roomatePreference");
 						} else {
-							router.push("/profile");
+							if (data.user.type == "Roomie") {
+								router.push("/profile");
+							} else {
+								router.push("/landlord-profile");
+							}
 						}
 					}, 1500);
 				}

@@ -19,6 +19,15 @@ io.on("connection", (socket) => {
 				where: {
 					id: chatId,
 				},
+				include: {
+					Matched: {
+						select: {
+							RequestedToName: true,
+							RequestedByName: true,
+							MatchRequestedBy: true,
+						},
+					},
+				},
 			});
 
 			if (isArrayEmpty(chat)) {
@@ -34,7 +43,7 @@ io.on("connection", (socket) => {
 						sender: true,
 					},
 				});
-				socket.emit("chat-messages", { chatMessages: messages, chatName: chat.name });
+				socket.emit("chat-messages", { chatMessages: messages, chatName: chat.name, RequestedToName: chat.Matched.RequestedToName, RequestedByName: chat.Matched.RequestedByName });
 			}
 		} catch (error) {
 			console.error("Error joining chat:", error);
