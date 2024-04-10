@@ -13,6 +13,7 @@ export const userStore = defineStore("userStore", () => {
 	const profilePicture = ref("");
 	const IsPreferenceFilled = ref(false);
 	const type = ref("");
+	const notifications = ref([]);
 	setUserFromStorage();
 
 	function setUserInfo(name, isAdminBool, givenEmail, phone, JWTtoken, givenProfilePicturePath, givenUserId, PreferenceFilled, givenType) {
@@ -89,5 +90,43 @@ export const userStore = defineStore("userStore", () => {
 		return userCred;
 	}
 
-	return { userName, userId, isAdmin, loggedIn, email, phoneNumber, token, profilePicture, IsPreferenceFilled, type, setUserInfo, setUserFromStorage, logOutUser, userInfo };
+	async function loadNotifications() {
+		try {
+			const response = await axios.get("/user/getNotifications", {
+				withCredentials: true,
+			});
+			//	console.log(response.data);
+			if (response.data.notifications != null) {
+				notifications.value = response.data.notifications;
+				return response.data;
+			}
+		} catch (error) {
+			console.error("Error loading notifications:", error);
+		}
+	}
+	async function loadPreferences() {
+		try {
+			const response = await axios.get(`/user/getPreferences`, {
+				withCredentials: true,
+			});
+			if (response.data.success) {
+				return {
+					success: true,
+					preferences: response.data.preferences,
+				};
+			} else {
+				return {
+					success: false,
+					message: response.data.message,
+				};
+			}
+		} catch (error) {
+			console.error("Error loading preferences:", error);
+			return {
+				success: false,
+				message: "Error loading preferences",
+			};
+		}
+	}
+	return { userName, userId, isAdmin, loggedIn, email, phoneNumber, token, profilePicture, IsPreferenceFilled, type, setUserInfo, setUserFromStorage, logOutUser, userInfo, loadNotifications, notifications, loadPreferences };
 });

@@ -8,7 +8,7 @@ import LandLordProfile from "../views/LandLordProfile.vue"; // Import the LandLo
 import { userStore } from "../stores/userStore";
 import Chat from "../views/chat.vue";
 import roomieSearch from "../views/roomieSearch.vue";
-
+import rooms from "../views/Rooms.vue";
 const router = createRouter({
 	history: createWebHistory(import.meta.env.BASE_URL),
 	routes: [
@@ -59,6 +59,12 @@ const router = createRouter({
 			name: "roomieSearch",
 			meta: { guest: false },
 			component: roomieSearch,
+		},
+		{
+			path: "/rooms",
+			name: "rooms",
+			meta: { guest: false },
+			component: rooms,
 		},
 	],
 });

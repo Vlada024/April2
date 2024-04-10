@@ -30,52 +30,99 @@ const upload = multer({
 });
 user.post("/user/addPreferences", async (req, res) => {
 	try {
-		//console.log(req.body);
 		const { genderPreference, bedtime, tidiness, smoking, willingToLiveWithSmoker, freeTime, friendsVisit, petsComfortable, petPreferences, noiseLevel, cookingFrequency, sharingBelongings, overnightGuests, cleaningDuties, workSchedule, spaceUsage, hobbies, privacyExpectation, allergies, longTermPlans, billSplit, conflictResolution } = req.body;
 
 		// Check for empty string values
 		if (!genderPreference || !bedtime || !tidiness || !smoking || !willingToLiveWithSmoker || !freeTime || !friendsVisit || !petsComfortable || !petPreferences.comfortable || !petPreferences.owned || !noiseLevel || !cookingFrequency || !sharingBelongings || !overnightGuests || !cleaningDuties || !workSchedule || !spaceUsage || !hobbies || !privacyExpectation || !allergies.value || !longTermPlans || !billSplit || !conflictResolution) {
 			return res.status(400).json({ message: "Missing required fields" });
 		}
-		const preference = await prisma.preference.create({
-			data: {
-				genderPreference,
-				bedtime,
-				tidiness,
-				smoking,
-				willingToLiveWithSmoker,
-				freeTime,
-				friendsVisit,
-				petsComfortable,
-				comfortable: petPreferences.comfortable,
-				owned: petPreferences.owned,
-				ownedPetsDescription: petPreferences.ownedPetsDescription,
-				noiseLevel,
-				cookingFrequency,
-				sharingBelongings,
-				overnightGuests,
-				cleaningDuties,
-				workSchedule,
-				spaceUsage,
-				hobbies,
-				privacyExpectation,
-				allergiesValue: allergies.value,
-				allergiesDescription: allergies.description,
-				longTermPlans,
-				billSplit,
-				conflictResolution,
+
+		// Check if the user already has a preference
+		const existingPreference = await prisma.preference.findUnique({
+			where: {
 				userId: req.user.id,
 			},
 		});
-		const updateUser = await prisma.user.update({
-			where: {
-				id: req.user.id,
-			},
-			data: {
-				PreferenceFilled: true,
-			},
-		});
-		res.status(201).json({ message: "Preference created successfully", preference });
+
+		if (existingPreference) {
+			// If the user already has a preference, update it
+			const updatedPreference = await prisma.preference.update({
+				where: {
+					id: existingPreference.id,
+				},
+				data: {
+					genderPreference,
+					bedtime,
+					tidiness,
+					smoking,
+					willingToLiveWithSmoker,
+					freeTime,
+					friendsVisit,
+					petsComfortable,
+					comfortable: petPreferences.comfortable,
+					owned: petPreferences.owned,
+					ownedPetsDescription: petPreferences.ownedPetsDescription,
+					noiseLevel,
+					cookingFrequency,
+					sharingBelongings,
+					overnightGuests,
+					cleaningDuties,
+					workSchedule,
+					spaceUsage,
+					hobbies,
+					privacyExpectation,
+					allergiesValue: allergies.value,
+					allergiesDescription: allergies.description,
+					longTermPlans,
+					billSplit,
+					conflictResolution,
+				},
+			});
+			res.status(200).json({ message: "Preference updated successfully", preference: updatedPreference });
+		} else {
+			// If the user doesn't have a preference, create a new one
+			const preference = await prisma.preference.create({
+				data: {
+					genderPreference,
+					bedtime,
+					tidiness,
+					smoking,
+					willingToLiveWithSmoker,
+					freeTime,
+					friendsVisit,
+					petsComfortable,
+					comfortable: petPreferences.comfortable,
+					owned: petPreferences.owned,
+					ownedPetsDescription: petPreferences.ownedPetsDescription,
+					noiseLevel,
+					cookingFrequency,
+					sharingBelongings,
+					overnightGuests,
+					cleaningDuties,
+					workSchedule,
+					spaceUsage,
+					hobbies,
+					privacyExpectation,
+					allergiesValue: allergies.value,
+					allergiesDescription: allergies.description,
+					longTermPlans,
+					billSplit,
+					conflictResolution,
+					userId: req.user.id,
+				},
+			});
+
+			const updateUser = await prisma.user.update({
+				where: {
+					id: req.user.id,
+				},
+				data: {
+					PreferenceFilled: true,
+				},
+			});
+
+			res.status(201).json({ message: "Preference created successfully", preference });
+		}
 	} catch (error) {
 		console.error(error);
 		res.status(500).json({ message: "Server error" });
@@ -155,6 +202,28 @@ user.get("/user/myprofile/:id", async (req, res) => {
 user.post("/user/editProfile", upload.single("photo"), async (req, res) => {
 	const request = req.body;
 	const { userName, aboutMe, desc } = request;
+
+	// Check if the username already exists
+	const existingUser = await prisma.user.findUnique({
+		where: {
+			username: userName,
+		},
+	});
+
+	if (existingUser && existingUser.id !== req.user.id) {
+		// If a user with the same username exists and it's not the current user, return an error
+		if (req.file == undefined) {
+			return res.status(400).send({ response: "error", errorMessage: "Username already exists" });
+		} else {
+			fs.unlink("./uploads/profilePictures/" + req.file.filename, (err) => {
+				if (err) {
+					console.error("Error deleting file:", err);
+				}
+			});
+			return res.status(400).send({ response: "error", errorMessage: "Username already exists" });
+		}
+	}
+
 	if (!userName || !aboutMe || !desc) {
 		if (req.file == undefined) {
 			return res.status(400).send({ response: "error", errorMessage: "Username, About and desc are required fields" });
@@ -262,6 +331,7 @@ user.post("/user/matchWithUser", async (req, res) => {
 					RequestedToName: requestedToUsername,
 				},
 			});
+			await createNotification("Match Request", "You have a match request pending from  " + matched.RequestedByName, matched.MatchRequestTo);
 		} else {
 			matched = await prisma.matched.create({
 				data: {
@@ -275,18 +345,7 @@ user.post("/user/matchWithUser", async (req, res) => {
 			});
 		}
 
-		// Create a new chat
-		const chat = await prisma.chat.create({
-			data: {
-				MatchedId: matched.id,
-				name: `Chat between ${req.user.username} and ${requestedToUsername}`,
-				users: {
-					connect: [{ id: requesterId }, { id: requesteeId }],
-				},
-			},
-		});
-
-		res.status(201).json({ matched, chat });
+		res.status(201).json({ matched });
 	} catch (error) {
 		console.error("Error creating matched and chat:", error);
 		res.status(500).json({ error: "Error creating matched and chat" });
@@ -297,7 +356,7 @@ user.post("/user/acceptMatchRequest", async (req, res) => {
 	try {
 		const request = req.body;
 		if (req.user.id == request.matchRequestTo) {
-			await prisma.matched.update({
+			const match = await prisma.matched.update({
 				where: {
 					id: request.matchId,
 				},
@@ -305,6 +364,18 @@ user.post("/user/acceptMatchRequest", async (req, res) => {
 					ApprovedRequest: true,
 				},
 			});
+
+			// Create a new chat
+			const chat = await prisma.chat.create({
+				data: {
+					MatchedId: match.id,
+					name: `Chat between ${match.RequestedByName} and ${match.RequestedToName}`,
+					users: {
+						connect: [{ id: match.MatchRequestedBy }, { id: match.MatchRequestTo }],
+					},
+				},
+			});
+			await createNotification("Match Accepeted", "You'r match request have been accepeted by " + match.RequestedToName, match.MatchRequestedBy);
 			res.status(201).json({ success: true, message: request.name + " have been added as a friend" });
 		} else {
 			res.status(201).json({ success: false, message: request.name + " not authorized to add this friend!" });
@@ -319,14 +390,16 @@ user.post("/user/rejectMatchRequest", async (req, res) => {
 	try {
 		const request = req.body;
 		if (req.user.id == request.matchRequestTo) {
-			await prisma.matched.update({
+			const match = await prisma.matched.update({
 				where: {
 					id: request.matchId,
 				},
 				data: {
 					RejectedRequest: true,
+					ApprovedRequest: false,
 				},
 			});
+			await createNotification("Match Rejection", "You'r match request have been rejected by " + match.RequestedToName, match.MatchRequestedBy);
 			res.status(201).json({ success: true, message: request.name + " have been ignored" });
 		} else {
 			res.status(201).json({ success: false, message: request.name + " not authorized to ignore!" });
@@ -334,6 +407,42 @@ user.post("/user/rejectMatchRequest", async (req, res) => {
 	} catch (error) {
 		console.error("Error accepting user match", error);
 		res.status(500).json({ error: "Error creating matched and chat" });
+	}
+});
+
+user.post("/user/removeFriend", async (req, res) => {
+	try {
+		const request = req.body;
+		const match = await prisma.matched.update({
+			where: {
+				id: request.id,
+			},
+			data: {
+				RejectedRequest: true,
+				ApprovedRequest: false,
+			},
+		});
+		res.status(201).json({ success: true, message: request.RequestedToName + " have been removed" });
+	} catch (error) {
+		console.error("Error accepting user match", error);
+		res.status(500).json({ error: "Error creating matched and chat" });
+	}
+});
+
+user.get("/user/getNotifications", async (req, res) => {
+	try {
+		const getNotifications = await prisma.notification.findMany({
+			where: {
+				userId: req.user.id,
+			},
+			orderBy: {
+				createdAt: "desc",
+			},
+		});
+		res.status(201).json({ success: true, notifications: getNotifications });
+	} catch (error) {
+		console.error("Error getting Notifications  ", error);
+		res.status(500).json({ error: "Error getting Notifications" });
 	}
 });
 
@@ -379,6 +488,32 @@ async function getMatchingUsers(userId) {
 	}
 }
 
+user.get("/user/getPreferences", async (req, res) => {
+	try {
+		const userPreference = await prisma.preference.findUnique({
+			where: {
+				userId: req.user.id,
+			},
+		});
+		if (userPreference) {
+			return res.status(200).json({
+				success: true,
+				preferences: userPreference,
+			});
+		} else {
+			return res.status(404).json({
+				success: false,
+				message: "Preference not found",
+			});
+		}
+	} catch (error) {
+		console.error("Error getting user preferences:", error);
+		return res.status(500).json({
+			success: false,
+			message: "Error getting user preferences",
+		});
+	}
+});
 function calculateMatchingPercentage(userPreference, otherUserPreference) {
 	const preferenceFields = ["genderPreference", "bedtime", "tidiness", "smoking", "willingToLiveWithSmoker", "freeTime", "friendsVisit", "petsComfortable", "comfortable", "owned", "noiseLevel", "cookingFrequency", "sharingBelongings", "overnightGuests", "cleaningDuties", "workSchedule", "spaceUsage", "hobbies", "privacyExpectation", "allergiesValue", "longTermPlans", "billSplit", "conflictResolution"];
 	return preferenceFields.reduce((matchingPercentage, field) => {
@@ -387,5 +522,16 @@ function calculateMatchingPercentage(userPreference, otherUserPreference) {
 		}
 		return matchingPercentage;
 	}, 0);
+}
+async function createNotification(title, message, userId) {
+	const notification = await prisma.notification.create({
+		data: {
+			title,
+			message,
+			userId,
+		},
+	});
+
+	return notification;
 }
 module.exports = user;

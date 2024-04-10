@@ -1,0 +1,338 @@
+<template>
+	<div class="container py-5">
+		<div class="row">
+			<div class="col-md-3">
+				<div class="card mb-3">
+					<button class="btn btn-primary" @click="showAddPostModal = true" v-if="userInfo.type == 'Landlord'">Add New Post</button>
+					<div class="card-body">
+						<h5 class="card-title">Search</h5>
+						<input type="text" class="form-control mb-3" v-model="searchText" placeholder="Search by title, description..." />
+					</div>
+				</div>
+				<div class="card mb-3">
+					<div class="card-body">
+						<h5 class="card-title">Price Range</h5>
+						<div class="form-group">
+							<label for="minPrice">Min Price</label>
+							<input type="number" class="form-control" id="minPrice" v-model="minPrice" />
+						</div>
+						<div class="form-group">
+							<label for="maxPrice">Max Price</label>
+							<input type="number" class="form-control" id="maxPrice" v-model="maxPrice" />
+						</div>
+					</div>
+				</div>
+				<div class="card mb-3">
+					<div class="card-body">
+						<h5 class="card-title">Sort by Price</h5>
+						<div class="form-group">
+							<div class="form-check">
+								<input class="form-check-input" type="radio" name="sortOrder" id="sortAsc" value="asc" v-model="sortOrder" />
+								<label class="form-check-label" for="sortAsc">Ascending</label>
+							</div>
+							<div class="form-check">
+								<input class="form-check-input" type="radio" name="sortOrder" id="sortDesc" value="desc" v-model="sortOrder" />
+								<label class="form-check-label" for="sortDesc">Descending</label>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="col-md-9">
+				<div class="row">
+					<div v-for="post in paginatedPosts" :key="post.id" class="col-lg-4 col-md-6 col-sm-6 col-6 d-flex justify-content-center py-3">
+						<div class="card text-light sp-card">
+							<div class="position-relative">
+								<img :src="`http://localhost:5555/uploads/postImages/` + post.image" class="card-img-top" alt="Room Image" />
+								<div class="badges">
+									<span class="badge bg-secondary">{{ post.location }}</span>
+									<span class="badge bg-primary">${{ post.price }}</span>
+								</div>
+							</div>
+							<div class="card-body d-flex flex-column justify-content-between align-items-start sp-bg-image-card">
+								<div>
+									<p class="card-title text-user-color">{{ post.user.username }}</p>
+									<h3 class="card-title text-black-50 fs-5">{{ post.name }}</h3>
+									<p class="card-text text-muted fs-6">{{ post.smallDescription }}</p>
+								</div>
+								<div class="text-center">
+									<p class="card-text text-muted fs-6">{{ post.fullDescription }}</p>
+									<button class="btn btn-primary btn-sm mt-2" v-if="userInfo.userId != post.userId" @click="createMatchRequest(post)">Create a chat request</button>
+								</div>
+							</div>
+						</div>
+					</div>
+					<h2 style="text-align: center" v-if="posts.length === 0">No Rooms are posted</h2>
+				</div>
+			</div>
+		</div>
+		<div class="d-flex justify-content-center">
+			<nav aria-label="Page navigation">
+				<ul class="pagination">
+					<li class="page-item" :class="{ disabled: currentPage === 1 }">
+						<a class="page-link" href="#" @click.prevent="changePage(currentPage - 1)">Previous</a>
+					</li>
+					<li class="page-item" v-for="page in totalPages" :key="page" :class="{ active: currentPage === page }">
+						<a class="page-link" href="#" @click.prevent="changePage(page)">{{ page }}</a>
+					</li>
+					<li class="page-item" :class="{ disabled: currentPage === totalPages }">
+						<a class="page-link" href="#" @click.prevent="changePage(currentPage + 1)">Next</a>
+					</li>
+				</ul>
+			</nav>
+		</div>
+	</div>
+	<div class="overlay" v-if="showAddPostModal">
+		<div class="overlay-content">
+			<h2>Add New Post</h2>
+			<form>
+				<div class="form-group">
+					<label for="name">Name</label>
+					<input type="text" class="form-control" id="name" v-model="newPost.name" />
+				</div>
+				<div class="form-group">
+					<label for="smallDescription">Small Description</label>
+					<textarea class="form-control" id="smallDescription" rows="2" v-model="newPost.smallDescription"></textarea>
+				</div>
+				<div class="form-group">
+					<label for="fullDescription">Full Description</label>
+					<textarea class="form-control" id="fullDescription" rows="3" v-model="newPost.fullDescription"></textarea>
+				</div>
+				<div class="form-group">
+					<label for="location">Location</label>
+					<input type="text" class="form-control" id="location" v-model="newPost.location" />
+				</div>
+				<div class="form-group">
+					<label for="price">Price</label>
+					<input type="text" class="form-control" id="price" v-model="newPost.price" />
+				</div>
+				<div class="form-group">
+					<label for="photo1">Photo:</label>
+					<input type="file" id="photo1" accept="image/*" @change="handleFileUpload" />
+				</div>
+
+				<div class="overlay-buttons">
+					<button type="button" class="btn btn-secondary" @click="showAddPostModal = false">Cancel</button>
+					<button type="button" class="btn btn-primary" @click="savePost">Save Post</button>
+				</div>
+			</form>
+		</div>
+	</div>
+</template>
+<script setup>
+	import { ref, computed, onMounted } from "vue";
+	import axios from "axios";
+	import { userStore } from "../stores/userStore";
+	import { toast } from "vue3-toastify";
+	const posts = ref([]);
+	const searchText = ref("");
+	const minPrice = ref(null);
+	const maxPrice = ref(null);
+	const sortOrder = ref("asc");
+	const currentPage = ref(1);
+	const itemsPerPage = 6;
+	const userInfo = userStore();
+	const showAddPostModal = ref(false);
+	const newPost = ref({
+		name: "",
+		smallDescription: "",
+		fullDescription: "",
+		location: "",
+		price: "",
+		image: null,
+	});
+	const fetchPosts = async () => {
+		try {
+			const response = await axios.get("/user/getAllPosts");
+			console.log(response.data);
+			posts.value = response.data;
+		} catch (error) {
+			console.error("Error fetching posts:", error);
+		}
+	};
+
+	onMounted(fetchPosts);
+
+	const filteredPosts = computed(() => {
+		let filtered = posts.value.filter((post) => {
+			const titleMatch = post.name.toLowerCase().includes(searchText.value.toLowerCase());
+			const location = post.location.toLowerCase().includes(searchText.value.toLowerCase());
+			const descriptionMatch = post.fullDescription.toLowerCase().includes(searchText.value.toLowerCase());
+			const usernameMatch = post.user.username.toLowerCase().includes(searchText.value.toLowerCase());
+			const priceMatch = (minPrice.value === null || post.price >= minPrice.value) && (maxPrice.value === null || post.price <= maxPrice.value);
+			return (titleMatch || descriptionMatch || usernameMatch || location) && priceMatch;
+		});
+
+		if (sortOrder.value === "asc") {
+			filtered = filtered.sort((a, b) => a.price - b.price);
+		} else {
+			filtered = filtered.sort((a, b) => b.price - a.price);
+		}
+
+		return filtered;
+	});
+
+	const paginatedPosts = computed(() => {
+		const startIndex = (currentPage.value - 1) * itemsPerPage;
+		const endIndex = startIndex + itemsPerPage;
+		return filteredPosts.value.slice(startIndex, endIndex);
+	});
+
+	const totalPages = computed(() => {
+		return Math.ceil(filteredPosts.value.length / itemsPerPage);
+	});
+
+	const changePage = (page) => {
+		if (page >= 1 && page <= totalPages.value) {
+			currentPage.value = page;
+		}
+	};
+
+	function handleFileUpload(event) {
+		const file = event.target.files[0];
+		newPost.value.image = file;
+	}
+	async function savePost() {
+		const formData = new FormData();
+		formData.append("name", newPost.value.name);
+		formData.append("smallDescription", newPost.value.smallDescription);
+		formData.append("fullDescription", newPost.value.fullDescription);
+		formData.append("location", newPost.value.location);
+		formData.append("price", newPost.value.price);
+		formData.append("photo", newPost.value.image);
+
+		try {
+			const response = await axios
+				.post("/user/createApartmentPost", formData, {
+					headers: {
+						"Content-Type": "multipart/form-data",
+					},
+				})
+				.then(function (response) {
+					toast.success("Post Created successfully", {
+						position: toast.POSITION.BOTTOM_RIGHT,
+						theme: "colored",
+					});
+					setTimeout(() => {
+						showAddPostModal.value = false;
+					}, 1500);
+				})
+				.catch(function (error) {
+					toast.error(handleErrors(error.response.data.errors), {
+						position: toast.POSITION.BOTTOM_RIGHT,
+						theme: "colored",
+						duration: 5000,
+					});
+				});
+		} catch (error) {
+			console.error(error);
+			// Handle the error
+		}
+	}
+
+	const createMatchRequest = async (post) => {
+		try {
+			const response = await axios.post("/user/createMatchRequest", {
+				MatchRequestedBy: userInfo.userId,
+				RequestedByName: userInfo.userName,
+				RequestedToName: post.user.username,
+				RequestedByMatchPercentage: "100%",
+				MatchRequestTo: post.userId,
+			});
+			toast.success("Match request sent successfully", {
+				position: toast.POSITION.BOTTOM_RIGHT,
+				theme: "colored",
+			});
+		} catch (error) {
+			if (error.response && error.response.status === 409) {
+				toast.error("chat request already exists", {
+					position: toast.POSITION.BOTTOM_RIGHT,
+					theme: "colored",
+				});
+			} else {
+				console.error("Error sending match request:", error);
+				toast.error("Failed to send match request", {
+					position: toast.POSITION.BOTTOM_RIGHT,
+					theme: "colored",
+				});
+			}
+		}
+	};
+	function handleErrors(errors) {
+		let errorMessage = "Errors occurred:\n\n";
+		errors.forEach((error, index) => {
+			errorMessage += `${index + 1}. ${error}\n`;
+		});
+
+		return errorMessage;
+	}
+</script>
+<style scoped>
+	.container {
+		margin-top: 5em;
+		margin-bottom: 2rem;
+		height: 90vh;
+		overflow-x: hidden;
+		background-color: rgba(243, 241, 241, 0.233);
+		border-top-left-radius: 2%;
+		border-bottom-left-radius: 2%;
+	}
+	.text-user-color {
+		color: #89cff0;
+	}
+	.overlay {
+		position: fixed;
+		top: 0;
+		left: 0;
+		width: 100%;
+		height: 100%;
+		background-color: rgba(0, 0, 0, 0.5);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		z-index: 999;
+	}
+
+	.overlay-content {
+		background-color: #fff;
+		padding: 20px;
+		max-width: 500px;
+		width: 100%;
+	}
+
+	.overlay-buttons {
+		display: flex;
+		justify-content: flex-end;
+		margin-top: 20px;
+	}
+
+	@media (max-width: 767px) {
+		.page-container {
+			margin-top: 3.5rem;
+			height: auto;
+		}
+
+		.container-fluid {
+			padding: 0 1rem;
+		}
+
+		.col-12 {
+			padding: 0;
+		}
+
+		.card {
+			border-radius: 0;
+			margin-top: 0.5rem;
+			margin-bottom: 0.5rem;
+		}
+
+		.friend-requests-card,
+		.friends-card {
+			margin-top: 0.5rem;
+		}
+
+		.overlay-content {
+			max-width: 90%;
+		}
+	}
+</style>

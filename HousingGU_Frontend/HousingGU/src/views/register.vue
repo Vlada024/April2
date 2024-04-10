@@ -33,7 +33,7 @@
 						<input type="file" class="form-control" id="profilePicture" @change="handleFileUpload" accept="image/*" />
 					</div>
 
-					<div v-if="selectedUser === 'Roomie'">
+					<div>
 						<div class="mb-3">
 							<label for="aboutMe" class="form-label">About Me</label>
 							<textarea class="form-control" id="aboutMe" placeholder="Enter something about yourself" v-model="formAboutMe"></textarea>
@@ -88,8 +88,6 @@
 			});
 			return;
 		}
-
-		// Check if the email is in a valid format
 		const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 		if (!emailRegex.test(formEmail.value)) {
 			toast.error("Please enter a valid email address.", {
@@ -99,17 +97,16 @@
 			return;
 		}
 
-		const registerCred = new FormData(); // Create a FormData object
+		const registerCred = new FormData();
 		registerCred.append("username", formUserName.value);
 		registerCred.append("email", formEmail.value);
 		registerCred.append("password", formPassword.value);
 		registerCred.append("phoneNumber", formPhone.value);
 		registerCred.append("profilePicture", profilePicture.value);
 		registerCred.append("type", selectedUser.value);
-		if (selectedUser.value == "Roomie") {
-			registerCred.append("aboutMe", formAboutMe.value);
-			registerCred.append("desc", formDescription.value);
-		}
+		registerCred.append("aboutMe", formAboutMe.value);
+		registerCred.append("desc", formDescription.value);
+
 		await axios
 			.post("/signup", registerCred, {
 				withCredentials: true,

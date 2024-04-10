@@ -108,7 +108,7 @@
 	const userInfo = userStore();
 	const route = useRoute();
 	const chatId = route.params.chatId;
-	const userId = userInfo.userId; // Replace with the actual user ID
+	const userId = userInfo.userId;
 	const chatRoomName = ref("");
 	const socket = io("http://localhost:3000");
 	const messages = ref([]);
@@ -141,7 +141,6 @@
 					} else {
 						chatRoomName.value = RequestedByName;
 					}
-
 					messages.value = chatMessages;
 				}
 			});

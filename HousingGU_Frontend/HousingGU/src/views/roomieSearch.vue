@@ -23,6 +23,21 @@
 			</div>
 			<div class="card-footer d-flex justify-content-end"></div>
 		</div>
+		<div v-if="showRejectModal" class="modal-overlay">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h5 class="modal-title">Confirm Rejection</h5>
+					<button type="button" class="close" @click="showRejectModal = false">
+						<span aria-hidden="true">&times;</span>
+					</button>
+				</div>
+				<div class="modal-body">Are you sure you want to reject this profile?</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-secondary" @click="showRejectModal = false">Cancel</button>
+					<button type="button" class="btn btn-danger" @click="confirmReject">Reject</button>
+				</div>
+			</div>
+		</div>
 	</div>
 </template>
 
@@ -32,28 +47,21 @@
 	import { userStore } from "../stores/userStore";
 	const userInfo = userStore();
 	const profileImgURL = ref("");
-	const profiles = ref([
-		{
-			name: "John Doe",
-			bio: "I love hiking and exploring new places.",
-			image: "src/assets/img/breakingbad.jpg",
-			matchPercentage: 90,
-		},
-		{
-			name: "Jane Smith",
-			bio: "Passionate about art and photography.",
-			image: "src/assets/img/breakingbad.jpg",
-			matchPercentage: 85,
-		},
-	]);
+	const profiles = ref([]);
+	const showRejectModal = ref(false);
 	const currentProfile = ref(profiles.value[0]);
 	onMounted(async () => {
 		loadMatchingUsers();
 	});
 	const rejectProfile = async () => {
+		showRejectModal.value = true;
+	};
+
+	const confirmReject = async () => {
 		await createMatchAndChat(userInfo.userId, profiles.value[0].id, profiles.value[0].username, profiles.value[0].matchPercentage, false);
 		profiles.value.shift();
 		updateCurrentProfile();
+		showRejectModal.value = false;
 	};
 
 	const acceptProfile = async () => {
@@ -90,7 +98,7 @@
 				matchBoolen,
 			});
 
-			//	console.log("Matched and chat created:", response.data);
+			//  console.log("Matched and chat created:", response.data);
 		} catch (error) {
 			console.error("Error creating matched and chat:", error);
 		}
@@ -113,5 +121,47 @@
 
 	.card {
 		max-width: 40rem;
+	}
+
+	.modal-overlay {
+		position: fixed;
+		top: 0;
+		left: 0;
+		width: 100%;
+		height: 100%;
+		background-color: rgba(0, 0, 0, 0.5);
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		z-index: 9999;
+	}
+
+	.modal-content {
+		background-color: #fff;
+		border-radius: 5px;
+		padding: 20px;
+		max-width: 500px;
+		width: 100%;
+		position: relative;
+	}
+
+	.modal-header {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		margin-bottom: 10px;
+	}
+
+	.modal-title {
+		margin: 0;
+	}
+
+	.modal-body {
+		margin-bottom: 20px;
+	}
+
+	.modal-footer {
+		display: flex;
+		justify-content: flex-end;
 	}
 </style>

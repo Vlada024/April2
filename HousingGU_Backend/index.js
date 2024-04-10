@@ -8,11 +8,11 @@ const secretKey = "SAJKDHASJKDHAjsdahnasd!@#!@asdjkabJBAS";
 const jwt = require("jsonwebtoken");
 require("./routes/chating");
 
-require("./routes/createUsers"); // uncomment to create users
+//require("./routes/createUsers"); // uncomment to create users
 app.use(
 	cors({
-		origin: "http://localhost:5173", // Replace with the URL of your front-end application
-		credentials: true, // Allow sending cookies/credentials
+		origin: "http://localhost:5173",
+		credentials: true,
 	})
 );
 app.use("/uploads", express.static("uploads"));
@@ -44,8 +44,10 @@ app.use("/user/*", function authenticateToken(req, res, next) {
 
 const authRoute = require("./routes/auth");
 const userRoute = require("./routes/user");
+const landlordRoute = require("./routes/landlord");
 app.use(authRoute);
 app.use(userRoute);
+app.use(landlordRoute);
 app.listen(port, () => {
 	console.log(`server started at http://localhost:${port}`);
 });

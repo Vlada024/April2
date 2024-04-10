@@ -17,6 +17,7 @@
 						<span class="cursor" :class="{ typing: typeStatus }">&nbsp;</span>
 					</h3>
 					<p class="col lead my-4 text-start">A trusted website for finding your roommate</p>
+					<button class="btn btn-primary btn-sm" v-if="userInfo.type == 'Roomie' || userInfo.loggedIn == false" @click="routeFindARoomate()">Find A Roomate</button>
 				</div>
 			</div>
 		</div>
@@ -73,6 +74,19 @@
 	import catagory from "../components/catagories.vue";
 	import FQS from "../components/FQS.vue";
 	import HomeCards from "../components/HomeCards.vue";
+	import { userStore } from "../stores/userStore";
+	import { useRouter, useRoute } from "vue-router";
+	const route = useRoute();
+	const router = useRouter();
+	const userInfo = userStore();
+
+	function routeFindARoomate() {
+		if (userInfo.loggedIn == false) {
+			router.push("./login");
+		} else if (userInfo.type == "Roomie") {
+			router.push("./roomieSearch");
+		}
+	}
 </script>
 <style scoped>
 	.custom-shape-divider-top-1705784739 {

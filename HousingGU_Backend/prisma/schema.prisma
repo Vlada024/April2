@@ -29,6 +29,7 @@ model User {
   chats            Chat[]
   messages         Message[]   @relation("MessageSender")
   Matched Matched[]
+  Notification Notification[]
 }
 
 model Chat {
@@ -104,4 +105,13 @@ model Preference {
   conflictResolution      String
   userId                  String @unique
   user                    User   @relation(fields: [userId], references: [id])
+}
+
+model Notification  {
+  id                      Int    @id @default(autoincrement())
+  title String
+  message   String
+  createdAt DateTime @default(now())
+  userId           String
+  user    User     @relation( fields: [userId], references: [id])
 }

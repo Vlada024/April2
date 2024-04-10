@@ -1,18 +1,4 @@
-<script setup>
-	import { ref } from "vue";
-	import { userStore } from "../stores/userStore";
-	import { useRouter, useRoute } from "vue-router";
-	const userInfo = userStore();
-	const route = useRoute();
-	const router = useRouter();
-	function logout() {
-		userInfo.logOutUser();
-		router.push("/");
-	}
-</script>
-
 <template>
-	<!---------------------------------------------- NavBar ---------------------------------------------->
 	<header>
 		<nav class="navbar navbar-expand-lg navbar-light bg-light">
 			<div class="container-fluid">
@@ -27,8 +13,11 @@
 						<li class="nav-item">
 							<router-link class="nav-link" to="/"><i class="bi bi-house-door sp-icon"></i> Home</router-link>
 						</li>
-						<li class="nav-item" v-if="userInfo.loggedIn == true && userInfo.type == 'Roomie'">
+						<li class="nav-item" v-if="userInfo.loggedIn == true && userInfo.type == 'Roomie' && userInfo.IsPreferenceFilled == true">
 							<router-link class="nav-link" to="/roomieSearch"><i class="bi bi-search sp-icon"></i> Search for Roomie</router-link>
+						</li>
+						<li class="nav-item" v-if="userInfo.loggedIn == true">
+							<router-link class="nav-link" to="/rooms"><i class="bi bi-search sp-icon"></i> Rooms</router-link>
 						</li>
 					</ul>
 					<ul class="navbar-nav">
@@ -48,7 +37,32 @@
 						<li class="nav-item" v-if="userInfo.loggedIn == false">
 							<router-link class="nav-link" to="/login"><i class="bi bi-person-fill sp-icon"></i> {{ userInfo.userName }}</router-link>
 						</li>
-						<router-link class="nav-link" to="/"><i class="bi bi-bell sp-icon"></i> Notifications</router-link>
+						<div class="dropdown" v-if="userInfo.loggedIn == true">
+							<button class="btn btn-secondary dropdown-toggle position-relative" type="button" id="notificationsDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+								<i class="bi bi-bell sp-icon"></i>
+								<span class="notification-badge" v-if="notificationCount > 0">{{ notificationCount }}</span>
+							</button>
+							<ul class="dropdown-menu dropdown-menu-end notification-dropdown" aria-labelledby="notificationsDropdown">
+								<li v-for="notification in notifications" :key="notification.id" class="notification-card">
+									<div class="card mb-3">
+										<div class="card-body">
+											<h5 class="card-title">{{ notification.title }}</h5>
+											<p class="card-text">{{ notification.message }}</p>
+											<p class="card-text">
+												<small class="text-muted">{{ formatDate(notification.createdAt) }}</small>
+											</p>
+										</div>
+									</div>
+								</li>
+								<li v-if="notificationCount === 0" class="notification-card">
+									<div class="card">
+										<div class="card-body">
+											<p class="card-text">No new notifications</p>
+										</div>
+									</div>
+								</li>
+							</ul>
+						</div>
 					</ul>
 				</div>
 			</div>
@@ -56,6 +70,71 @@
 	</header>
 </template>
 
+<script setup>
+	import { ref, onMounted, computed, onUnmounted, watch } from "vue";
+	import { userStore } from "../stores/userStore";
+	import { useRouter, useRoute } from "vue-router";
+	import axios from "axios";
+
+	const userInfo = userStore();
+	const route = useRoute();
+	const router = useRouter();
+	const notifications = ref([]);
+	const notificationCount = computed(() => notifications.value.length);
+	let intervalId;
+
+	onMounted(async () => {
+		await loadNotifications();
+		startNotificationPoller();
+	});
+
+	onUnmounted(() => {
+		stopNotificationPoller();
+	});
+
+	watch(
+		() => userInfo.loggedIn,
+		async (newValue) => {
+			if (newValue) {
+				await loadNotifications();
+			}
+		}
+	);
+
+	async function loadNotifications() {
+		try {
+			const response = await userInfo.loadNotifications();
+			if (response.success && Array.isArray(response.notifications)) {
+				notifications.value = response.notifications;
+			} else {
+				notifications.value = [];
+			}
+		} catch (error) {
+			console.error("Error loading notifications:", error);
+			notifications.value = [];
+		}
+	}
+
+	function startNotificationPoller() {
+		intervalId = setInterval(loadNotifications, 30000);
+	}
+
+	function stopNotificationPoller() {
+		clearInterval(intervalId);
+	}
+
+	async function logout() {
+		stopNotificationPoller();
+		notifications.value = [];
+		userInfo.logOutUser();
+		router.push("/");
+	}
+
+	function formatDate(dateString) {
+		const date = new Date(dateString);
+		return date.toLocaleString();
+	}
+</script>
 <style scoped>
 	header {
 		width: 100%;
@@ -67,9 +146,27 @@
 	.sp-icon {
 		font-size: 20px;
 	}
-
 	.nav-item {
 		color: #000000;
 		border-radius: 8%;
+	}
+	.notification-dropdown {
+		max-height: 400px;
+		width: 200px;
+		overflow-y: auto;
+	}
+	.notification-card {
+		padding: 0.5rem;
+	}
+	.notification-badge {
+		position: absolute;
+		top: -5px;
+		right: -5px;
+		background-color: red;
+		color: white;
+		font-size: 12px;
+		font-weight: bold;
+		padding: 2px 6px;
+		border-radius: 50%;
 	}
 </style>

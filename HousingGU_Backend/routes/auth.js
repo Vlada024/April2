@@ -60,7 +60,7 @@ auth.post("/signup", authLimiter, upload.single("profilePicture"), async (req, r
 				});
 				return res.status(400).send({ response: "error", errorMessage: "Username, email, and phone number and file are required fields" });
 			} else {
-				let hashedPassword = await bcrypt.hash(password, saltRounds); // regular user insert
+				let hashedPassword = await bcrypt.hash(password, saltRounds);
 				const user = await prisma.user.create({
 					data: {
 						username: username,
@@ -75,7 +75,7 @@ auth.post("/signup", authLimiter, upload.single("profilePicture"), async (req, r
 				});
 			}
 		} else {
-			let hashedPassword = await bcrypt.hash(password, saltRounds); // renter insert to Database
+			let hashedPassword = await bcrypt.hash(password, saltRounds);
 			const user = await prisma.user.create({
 				data: {
 					username: username,
@@ -84,6 +84,8 @@ auth.post("/signup", authLimiter, upload.single("profilePicture"), async (req, r
 					type: type,
 					phoneNumber: phoneNumber,
 					profilePicture: req.file.filename,
+					desc: desc,
+					aboutMe: aboutMe,
 				},
 			});
 		}
@@ -148,7 +150,6 @@ auth.post("/login", authLimiter, async (req, res) => {
 				}
 				return res.status(200).json({ success: true, message: "logged in", user: userWithoutPassword, token: token });
 			} else {
-				// response is OutgoingMessage object that server response http request
 				return res.status(400).json({ success: false, message: "passwords do not match" });
 			}
 		});

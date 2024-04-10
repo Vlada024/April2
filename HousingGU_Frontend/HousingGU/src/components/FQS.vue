@@ -32,7 +32,7 @@
 						<button class="accordion-button collapsed sp-bg-color-w" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">Is there a cost to use the platform?</button>
 					</h2>
 					<div id="collapseThree" class="accordion-collapse collapse" data-bs-parent="#accordionExample">
-						<div class="accordion-body">No, our Roommate Matching Platform is free to use for all users.</div>
+						<div class="accordion-body">No, our Roommate Matching Platform (HousingGU) is free to use for all users.</div>
 					</div>
 				</div>
 
@@ -42,7 +42,7 @@
 						<button class="accordion-button collapsed sp-bg-color-w" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFour" aria-expanded="false" aria-controls="collapseFour">How can I contact support?</button>
 					</h2>
 					<div id="collapseFour" class="accordion-collapse collapse" data-bs-parent="#accordionExample">
-						<div class="accordion-body">You can reach our support team at support@roommatematch.com or 1-888-123-4567.</div>
+						<div class="accordion-body">You can reach our support team at support@HousingGU.com.</div>
 					</div>
 				</div>
 			</div>
