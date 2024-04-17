@@ -1,16 +1,22 @@
 <template>
 	<div class="page-container">
-		<div class="container-fluid h-100 px-0">
-			<div class="row h-100 mx-0">
-				<div class="col-12 col-md-4 h-80">
+		<div class="container-fluid">
+			<div class="row h-100 mx-0 mb-3">
+				<div class="col-12 col-md-4">
 					<div class="card h-80 mt-1">
 						<img :src="profileImgURL" alt="Profile Picture" class="card-img-top" />
 						<div class="card-body">
 							<h5 class="card-title">{{ userInfo.userName }}</h5>
-							<p class="card-text">{{ desc }}</p>
+							<p class="card-text"></p>
 							<button class="btn btn-primary mr-1" @click="router.push('/roomatePreference')">Edit Preferance</button>
 							<button class="btn btn-primary" @click="editProfile">Edit Profile</button>
 							<button class="btn btn-primary" @click="showPreferencesBool">View Preferences</button>
+							<div class="mt-3 mb-3">
+								<p><strong>Age:</strong> {{ age }}</p>
+								<p><strong>Gender:</strong> {{ gender }}</p>
+								<p><strong>City:</strong> {{ city }}</p>
+								<p><strong>Nationality:</strong> {{ nationality }}</p>
+							</div>
 						</div>
 					</div>
 				</div>
@@ -25,27 +31,35 @@
 						<div class="card-body">
 							<h5 class="card-title">Friend Requests</h5>
 							<div class="friend-requests-container" style="max-height: 400px; overflow: auto">
-								<div v-for="(request, index) in friendRequests" :key="index" class="card mb-3">
-									<div class="row g-0 align-items-center">
-										<div class="col-4">
-											<img :src="'http://localhost:5555/uploads/profilePictures/' + request.image" alt="Friend Request" class="img-fluid rounded-start" />
-										</div>
-										<div class="col-8">
-											<div class="card-body">
-												<h5 class="card-title">{{ request.name }}</h5>
-												<p class="card-text">{{ request.description }}</p>
-												<div class="d-flex justify-content-between align-items-center">
-													<span class="badge bg-primary">{{ request.matchPercentage }}% Match</span>
-													<div>
-														<button class="btn btn-success btn-sm me-2" @click="acceptRequest(request)">Accept</button>
-														<button class="btn btn-danger btn-sm" @click="ignoreRequest(request)">Ignore</button>
+								<div v-if="friendRequests.length === 0" class="row g-0 align-items-center">
+									<div class="col">No Friend Requests</div>
+								</div>
+								<div v-else>
+									<div v-for="(request, index) in friendRequests" :key="index" class="card mb-3">
+										<div class="row g-0 align-items-center">
+											<div class="col-2">
+												<img :src="'http://localhost:5555/uploads/profilePictures/' + request.image" alt="Friend Request" class="img-fluid rounded-start" />
+											</div>
+											<div class="col-10">
+												<div class="card-body">
+													<h5 class="card-title">{{ request.name }}</h5>
+													<p class="card-text"><strong>About:</strong> {{ request.description }}</p>
+													<p class="card-text"><strong>Age:</strong> {{ request.age }}</p>
+													<p class="card-text"><strong>Nationality:</strong> {{ request.nationality }}</p>
+													<p class="card-text"><strong>City:</strong> {{ request.city }}</p>
+													<p class="card-text"><strong>Gender:</strong> {{ request.gender }}</p>
+													<div class="d-flex justify-content-between align-items-center">
+														<span class="badge bg-primary">{{ request.matchPercentage }}% Match</span>
+														<div>
+															<button class="btn btn-success btn-sm me-2" @click="acceptRequest(request)">Accept</button>
+															<button class="btn btn-danger btn-sm" @click="ignoreRequest(request)">Ignore</button>
+														</div>
 													</div>
 												</div>
 											</div>
 										</div>
 									</div>
 								</div>
-								<div class="row g-0 align-items-center" v-if="friendRequests.length === 0">No Friends</div>
 							</div>
 						</div>
 					</div>
@@ -53,15 +67,21 @@
 						<div class="card-body">
 							<h5 class="card-title">Friends</h5>
 							<div class="list-group" style="max-height: 400px; overflow: auto">
-								<button v-for="friend in friends" :key="friend.id" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-									<img :src="'http://localhost:5555/uploads/profilePictures/' + friend.user.profilePicture" alt="Friend Request" class="avatar" />
-									{{ friend.user.username }}
-									<div>
-										<button class="btn btn-primary" @click="goToChat(friend.Chat.id)">Chat</button>
-										<button class="btn btn-danger" @click="showRemoveFriendModal(friend)">Remove</button>
-									</div>
-								</button>
-								<div class="list-group-item disabled" v-if="friends.length === 0">No Matched Roomie</div>
+								<div v-if="friends.length === 0" class="list-group-item disabled">No Matched Roomie</div>
+								<template v-else>
+									<button v-for="friend in friends" :key="friend.id" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+										<img v-if="friend.user.profilePicture" :src="'http://localhost:5555/uploads/profilePictures/' + friend.user.profilePicture" alt="Friend Request" class="avatar" />
+										{{ friend.user.username }}
+										<div v-if="friend.user.age">Age: {{ friend.user.age }}</div>
+										<div v-if="friend.user.nationality">Nationality: {{ friend.user.nationality }}</div>
+										<div v-if="friend.user.city">City: {{ friend.user.city }}</div>
+										<div v-if="friend.user.gender">Gender: {{ friend.user.gender }}</div>
+										<div>
+											<button class="btn btn-primary" @click="goToChat(friend.Chat.id)">Chat</button>
+											<button class="btn btn-danger" @click="showRemoveFriendModal(friend)">Remove</button>
+										</div>
+									</button>
+								</template>
 							</div>
 						</div>
 					</div>
@@ -95,8 +115,23 @@
 								<textarea class="form-control" id="aboutMe" rows="3" v-model="editedProfile.aboutMe"></textarea>
 							</div>
 							<div class="form-group">
-								<label for="desc">Description</label>
-								<textarea class="form-control" id="desc" rows="3" v-model="editedProfile.desc"></textarea>
+								<label for="age">Age</label>
+								<input type="number" class="form-control" id="age" v-model="editedProfile.age" />
+							</div>
+							<div class="form-group">
+								<label for="nationality">Nationality</label>
+								<input type="text" class="form-control" id="nationality" v-model="editedProfile.nationality" />
+							</div>
+							<div class="form-group">
+								<label for="city">City</label>
+								<input type="text" class="form-control" id="city" v-model="editedProfile.city" />
+							</div>
+							<div class="form-group">
+								<label for="gender">Gender</label>
+								<select class="form-control" id="gender" v-model="editedProfile.gender">
+									<option value="Male">Male</option>
+									<option value="Female">Female</option>
+								</select>
 							</div>
 							<div class="form-group">
 								<label for="photo1">Photo 1:</label>
@@ -254,8 +289,11 @@
 	const isEditOverlayOpen = ref(false);
 	const editedProfile = ref({
 		userName: "",
-		desc: "",
 		aboutMe: "",
+		age: 0,
+		nationality: "",
+		city: "",
+		gender: "male",
 	});
 	const friendRequests = ref([]);
 	const removeFriendModal = ref({
@@ -286,7 +324,10 @@
 		billSplit: "",
 		conflictResolution: "",
 	});
-
+	const age = ref("");
+	const gender = ref("");
+	const city = ref("");
+	const nationality = ref("");
 	const showRemoveFriendModal = (friend) => {
 		removeFriendModal.value.show = true;
 		removeFriendModal.value.friend = friend;
@@ -341,8 +382,11 @@
 	}
 	function editProfile() {
 		editedProfile.value.userName = userInfo.userName;
-		editedProfile.value.desc = desc.value;
 		editedProfile.value.aboutMe = aboutMe.value;
+		editedProfile.value.age = age.value;
+		editedProfile.value.nationality = nationality.value;
+		editedProfile.value.city = city.value;
+		editedProfile.value.gender = gender.value;
 		editedProfile.value.photos = ["../assets/img/photo1.jpg", "../assets/img/photo2.jpg", "../assets/img/photo3.jpg"];
 		openEditOverlay();
 	}
@@ -359,34 +403,34 @@
 		const formData = new FormData();
 		formData.append("userName", editedProfile.value.userName);
 		formData.append("aboutMe", editedProfile.value.aboutMe);
-		formData.append("desc", editedProfile.value.desc);
+		formData.append("age", editedProfile.value.age);
+		formData.append("nationality", editedProfile.value.nationality);
+		formData.append("city", editedProfile.value.city);
+		formData.append("gender", editedProfile.value.gender);
 		formData.append("photo", editedProfile.value.photos[0]);
-		try {
-			const response = await axios
-				.post("user/editProfile", formData, {
-					headers: {
-						"Content-Type": "multipart/form-data",
-					},
-					withCredentials: true,
-				})
-				.then(function (response) {
-					toast.success(response.data.message, {
-						position: toast.POSITION.BOTTOM_RIGHT,
-						theme: "colored",
-					});
 
-					closeEditOverlay();
-					loadMyProfile();
-					loadFriendRequests();
-				})
-				.catch(function (error) {
-					toast.error(error.response.data.errorMessage, {
-						position: toast.POSITION.BOTTOM_RIGHT,
-						theme: "colored",
-					});
-				});
+		try {
+			const response = await axios.post("user/editProfile", formData, {
+				headers: {
+					"Content-Type": "multipart/form-data",
+				},
+				withCredentials: true,
+			});
+
+			toast.success(response.data.message, {
+				position: toast.POSITION.BOTTOM_RIGHT,
+				theme: "colored",
+			});
+
+			closeEditOverlay();
+			loadMyProfile();
+			loadFriendRequests();
 		} catch (error) {
 			console.error("Error saving profile changes:", error);
+			toast.error(error.response.data.errorMessage, {
+				position: toast.POSITION.BOTTOM_RIGHT,
+				theme: "colored",
+			});
 		}
 	}
 
@@ -442,11 +486,13 @@
 			.get("/user/myprofile/" + userInfo.userId, { withCredentials: true })
 			.then((response) => {
 				const user = response.data.user;
-				desc.value = user.desc;
 				aboutMe.value = user.aboutMe;
 				friends.value = response.data.chats;
 				userInfo.profilePicture = user.profilePicture;
-				//	console.log(friends.value);
+				age.value = user.age;
+				gender.value = user.gender;
+				city.value = user.city;
+				nationality.value = user.nationality;
 			})
 			.catch(function (error) {
 				if (error.response && error.response.status === 401) {
@@ -473,10 +519,7 @@
 <style scoped>
 	.page-container {
 		margin-top: 4.7rem;
-		height: 90vh;
-	}
-
-	.container-fluid {
+		height: 100vh;
 		background-color: rgba(213, 169, 248, 0.233);
 	}
 

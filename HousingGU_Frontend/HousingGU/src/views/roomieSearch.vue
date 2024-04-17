@@ -7,8 +7,15 @@
 					<h5 class="card-title mb-0">{{ currentProfile.username }}</h5>
 					<div class="badge bg-success">{{ currentProfile.matchPercentage.toFixed(1) }}% Match</div>
 				</div>
-				<p class="card-text">{{ currentProfile.desc }}</p>
+
 				<p class="card-text">{{ currentProfile.aboutMe }}</p>
+
+				<div class="profile-details">
+					<p><strong>Gender:</strong> {{ currentProfile.gender }}</p>
+					<p><strong>City:</strong> {{ currentProfile.city }}</p>
+					<p><strong>Nationality:</strong> {{ currentProfile.nationality }}</p>
+					<p><strong>Age:</strong> {{ currentProfile.age }}</p>
+				</div>
 			</div>
 			<div class="card-footer d-flex justify-content-end">
 				<button class="btn btn-danger mr-2" @click="rejectProfile">Reject</button>

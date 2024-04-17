@@ -28,11 +28,11 @@
 						<div class="form-group">
 							<div class="form-check">
 								<input class="form-check-input" type="radio" name="sortOrder" id="sortAsc" value="asc" v-model="sortOrder" />
-								<label class="form-check-label" for="sortAsc">Ascending</label>
+								<label class="form-check-label" for="sortAsc">Low to high</label>
 							</div>
 							<div class="form-check">
 								<input class="form-check-input" type="radio" name="sortOrder" id="sortDesc" value="desc" v-model="sortOrder" />
-								<label class="form-check-label" for="sortDesc">Descending</label>
+								<label class="form-check-label" for="sortDesc">High to low</label>
 							</div>
 						</div>
 					</div>
@@ -46,7 +46,7 @@
 								<img :src="`http://localhost:5555/uploads/postImages/` + post.image" class="card-img-top" alt="Room Image" />
 								<div class="badges">
 									<span class="badge bg-secondary">{{ post.location }}</span>
-									<span class="badge bg-primary">${{ post.price }}</span>
+									<span class="badge bg-primary">${{ post.price }} per month</span>
 								</div>
 							</div>
 							<div class="card-body d-flex flex-column justify-content-between align-items-start sp-bg-image-card">
@@ -103,7 +103,7 @@
 					<input type="text" class="form-control" id="location" v-model="newPost.location" />
 				</div>
 				<div class="form-group">
-					<label for="price">Price</label>
+					<label for="price">Price per month</label>
 					<input type="text" class="form-control" id="price" v-model="newPost.price" />
 				</div>
 				<div class="form-group">
@@ -144,7 +144,7 @@
 	const fetchPosts = async () => {
 		try {
 			const response = await axios.get("/user/getAllPosts");
-			console.log(response.data);
+			//	console.log(response.data);
 			posts.value = response.data;
 		} catch (error) {
 			console.error("Error fetching posts:", error);
@@ -218,11 +218,19 @@
 					}, 1500);
 				})
 				.catch(function (error) {
-					toast.error(handleErrors(error.response.data.errors), {
-						position: toast.POSITION.BOTTOM_RIGHT,
-						theme: "colored",
-						duration: 5000,
-					});
+					if (error.response.data.errors !== undefined) {
+						toast.error(handleErrors(error.response.data.errors), {
+							position: toast.POSITION.BOTTOM_RIGHT,
+							theme: "colored",
+							duration: 5000,
+						});
+					} else {
+						toast.error(error.response.data.errorMessage, {
+							position: toast.POSITION.BOTTOM_RIGHT,
+							theme: "colored",
+							duration: 5000,
+						});
+					}
 				});
 		} catch (error) {
 			console.error(error);

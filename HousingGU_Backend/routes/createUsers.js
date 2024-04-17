@@ -42,7 +42,6 @@ async function createUserWithPreferences() {
 			username: faker.internet.userName(),
 			email: faker.internet.email(),
 			password: "$2b$10$t9ZiV/XTwl67Ou9ToQn9XOTntDNO.GPQV43.WFamADHC/rNLdu8Ia",
-			desc: faker.lorem.sentence(),
 			aboutMe: faker.lorem.paragraph(),
 			type: "Roomie",
 			phoneNumber: faker.phone.number(),
@@ -52,6 +51,10 @@ async function createUserWithPreferences() {
 			Preference: {
 				create: preferences,
 			},
+			age: faker.helpers.arrayElement([18, 22, 25, 22, 24]),
+			city: faker.helpers.arrayElement(["New York", "Los Angeles", "Chicago", "Houston"]),
+			nationality: "American",
+			gender: faker.helpers.arrayElement(["Female", "Male", "other gender"]),
 		},
 	});
 	console.log("User created:", user);

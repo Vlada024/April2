@@ -17,7 +17,7 @@
 						<span class="cursor" :class="{ typing: typeStatus }">&nbsp;</span>
 					</h3>
 					<p class="col lead my-4 text-start">A trusted website for finding your roommate</p>
-					<button class="btn btn-primary btn-sm" v-if="userInfo.type == 'Roomie' || userInfo.loggedIn == false" @click="routeFindARoomate()">Find A Roomate</button>
+					<button class="btn btn-primary" style="width: 10rem; height: 3.5rem" v-if="userInfo.type == 'Roomie' || userInfo.loggedIn == false" @click="routeFindARoomate()">Find A Roomate</button>
 				</div>
 			</div>
 		</div>

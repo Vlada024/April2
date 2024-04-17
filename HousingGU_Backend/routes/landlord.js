@@ -122,7 +122,7 @@ landlord.post(
 					user: { connect: { id: req.user.id } },
 				},
 			});
-
+			await createNotification("New Post!", "You have created a New Post! with the name: " + name, req.user.id);
 			res.status(200).json({ message: "Apartment created successfully", apartment: newApartment });
 		} catch (error) {
 			console.error(error);
@@ -195,66 +195,88 @@ landlord.get("/user/getAllPosts/:userId", async (req, res) => {
 });
 
 landlord.post("/user/editPost", upload.single("image"), async (req, res) => {
-	const postId = req.body.id;
-	const { name, smallDescription, fullDescription, location, price } = req.body;
-	const image = req.file.filename; // Get the filename of the uploaded image
-	const lengthErrors = [];
-	// Validate length constraints
-	const nameMinLength = 3;
-	const nameMaxLength = 50;
-	const descriptionMinLength = 10;
-	const descriptionMaxLength = 180;
-	const locationMinLength = 3;
-	const locationMaxLength = 180;
-	const priceMinLength = 3;
-	const priceMaxLength = 20;
-	if (name.length < nameMinLength || name.length > nameMaxLength) {
-		lengthErrors.push(`Name must be between ${nameMinLength} and ${nameMaxLength} characters`);
-	}
-
-	if (smallDescription.length < descriptionMinLength || smallDescription.length > descriptionMaxLength) {
-		lengthErrors.push(`Small Description must be between ${descriptionMinLength} and ${descriptionMaxLength} characters`);
-	}
-
-	if (fullDescription.length < descriptionMinLength || fullDescription.length > descriptionMaxLength) {
-		lengthErrors.push(`Full Description must be between ${descriptionMinLength} and ${descriptionMaxLength} characters`);
-	}
-
-	if (location.length < locationMinLength || location.length > locationMaxLength) {
-		lengthErrors.push(`Location must be between ${locationMinLength} and ${locationMaxLength} characters`);
-	}
-
-	if (price.length < priceMinLength || price.length > priceMaxLength) {
-		lengthErrors.push(`Price must be between ${priceMinLength} and ${priceMaxLength} characters`);
-	}
-
-	if (lengthErrors.length > 0) {
-		fs.unlink(`uploads/postimages/${req.file.filename}`, (err) => {
-			if (err) {
-				console.error("Error deleting file:", err);
-			}
-		});
-		return res.status(400).json({ errors: lengthErrors });
-	}
-
-	if (!req.file) {
-		return res.status(400).json({ response: "error", errorMessage: "No file uploaded" });
-	}
-
 	try {
-		const updatedPost = await prisma.apartment.update({
-			where: { id: postId },
-			data: {
-				name,
-				smallDescription,
-				fullDescription,
-				location,
-				price,
-				image,
-			},
-		});
+		const postId = req.body.id;
+		const { name, smallDescription, fullDescription, location, price } = req.body;
+		const lengthErrors = [];
+		// Validate length constraints
+		const nameMinLength = 3;
+		const nameMaxLength = 50;
+		const descriptionMinLength = 10;
+		const descriptionMaxLength = 180;
+		const locationMinLength = 3;
+		const locationMaxLength = 180;
+		const priceMinLength = 3;
+		const priceMaxLength = 20;
+		if (name.length < nameMinLength || name.length > nameMaxLength) {
+			lengthErrors.push(`Name must be between ${nameMinLength} and ${nameMaxLength} characters`);
+		}
 
-		res.status(200).json({ message: "Post updated successfully", updatedPost });
+		if (smallDescription.length < descriptionMinLength || smallDescription.length > descriptionMaxLength) {
+			lengthErrors.push(`Small Description must be between ${descriptionMinLength} and ${descriptionMaxLength} characters`);
+		}
+
+		if (fullDescription.length < descriptionMinLength || fullDescription.length > descriptionMaxLength) {
+			lengthErrors.push(`Full Description must be between ${descriptionMinLength} and ${descriptionMaxLength} characters`);
+		}
+
+		if (location.length < locationMinLength || location.length > locationMaxLength) {
+			lengthErrors.push(`Location must be between ${locationMinLength} and ${locationMaxLength} characters`);
+		}
+
+		if (price.length < priceMinLength || price.length > priceMaxLength) {
+			lengthErrors.push(`Price must be between ${priceMinLength} and ${priceMaxLength} characters`);
+		}
+
+		if (lengthErrors.length > 0) {
+			if (!name || !smallDescription || !fullDescription || !location || !price) {
+				if (req.file) {
+					fs.unlink(`uploads/postimages/${req.file.filename}`, (err) => {
+						if (err) {
+							console.error("Error deleting file:", err);
+						}
+					});
+				}
+				return res.status(400).json({ response: "error", errorMessage: "All fields are required" });
+			}
+
+			// Handle the case when no file is uploaded
+			if (!req.file) {
+				return res.status(400).json({ response: "error", errorMessage: "No file uploaded" });
+			}
+			fs.unlink(`uploads/postimages/${req.file.filename}`, (err) => {
+				if (err) {
+					console.error("Error deleting file:", err);
+				}
+			});
+			return res.status(400).json({ errors: lengthErrors });
+		}
+		if (!req.file) {
+			const updatedPost = await prisma.apartment.update({
+				where: { id: postId },
+				data: {
+					name,
+					smallDescription,
+					fullDescription,
+					location,
+					price,
+				},
+			});
+			res.status(200).json({ message: "Post updated successfully", updatedPost });
+		} else {
+			const updatedPost = await prisma.apartment.update({
+				where: { id: postId },
+				data: {
+					name,
+					smallDescription,
+					fullDescription,
+					location,
+					price,
+					image: req.file.filename,
+				},
+			});
+			res.status(200).json({ message: "Post updated successfully", updatedPost });
+		}
 	} catch (error) {
 		console.error("Error updating post:", error);
 		res.status(500).json({ error: "An error occurred while updating the post" });
@@ -288,7 +310,6 @@ landlord.post("/user/createMatchRequest", async (req, res) => {
 				MatchRequestTo: req.body.MatchRequestTo,
 			},
 		});
-
 		if (existingRequest) {
 			if (existingRequest.ApprovedRequest == true || (existingRequest.ApprovedRequest == false && existingRequest.RejectedRequest == false)) {
 				return res.status(409).json({ error: "A chat request has already been sent by the user" });
@@ -306,7 +327,7 @@ landlord.post("/user/createMatchRequest", async (req, res) => {
 				RejectedRequest: false,
 			},
 		});
-
+		await createNotification("Match Request", "You have a match request pending from  " + newMatchRequest.RequestedByName, newMatchRequest.MatchRequestTo);
 		res.status(201).json({ message: "Match request created successfully", matchRequest: newMatchRequest });
 	} catch (error) {
 		console.error("Error creating match request:", error);
@@ -332,4 +353,16 @@ landlord.get("/landingPagePosts", async (req, res) => {
 		res.status(500).json({ error: "An error occurred while fetching apartments" });
 	}
 });
+
+async function createNotification(title, message, userId) {
+	const notification = await prisma.notification.create({
+		data: {
+			title,
+			message,
+			userId,
+		},
+	});
+
+	return notification;
+}
 module.exports = landlord;

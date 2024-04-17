@@ -333,35 +333,51 @@
 		formData.append("price", newPost.value.price);
 		formData.append("photo", newPost.value.image);
 
-		try {
-			const response = await axios
-				.post("/user/createApartmentPost", formData, {
-					headers: {
-						"Content-Type": "multipart/form-data",
-					},
-				})
-				.then(function (response) {
-					toast.success("Post Created successfully", {
-						position: toast.POSITION.BOTTOM_RIGHT,
-						theme: "colored",
+		const price = parseInt(newPost.value.price);
+		if (isNaN(price) || price !== parseFloat(newPost.value.price)) {
+			toast.error("Price must be an integer", {
+				position: toast.POSITION.BOTTOM_RIGHT,
+				theme: "colored",
+			});
+			return;
+		} else {
+			try {
+				const response = await axios
+					.post("/user/createApartmentPost", formData, {
+						headers: {
+							"Content-Type": "multipart/form-data",
+						},
+					})
+					.then(function (response) {
+						toast.success("Post Created successfully", {
+							position: toast.POSITION.BOTTOM_RIGHT,
+							theme: "colored",
+						});
+						setTimeout(() => {
+							showAddPostModal.value = false;
+						}, 1500);
+					})
+					.catch(function (error) {
+						if (error.response.data.errors !== undefined) {
+							toast.error(handleErrors(error.response.data.errors), {
+								position: toast.POSITION.BOTTOM_RIGHT,
+								theme: "colored",
+								duration: 5000,
+							});
+						} else {
+							toast.error(error.response.data.errorMessage, {
+								position: toast.POSITION.BOTTOM_RIGHT,
+								theme: "colored",
+								duration: 5000,
+							});
+						}
 					});
-					setTimeout(() => {
-						showAddPostModal.value = false;
-					}, 1500);
-				})
-				.catch(function (error) {
-					toast.error(handleErrors(error.response.data.errors), {
-						position: toast.POSITION.BOTTOM_RIGHT,
-						theme: "colored",
-						duration: 5000,
-					});
-				});
-		} catch (error) {
-			console.error(error);
-			// Handle the error
+			} catch (error) {
+				console.error(error);
+				// Handle the error
+			}
 		}
 	}
-
 	function showEditPostModal(post) {
 		postToEdit.value = { ...post };
 		newPost.value = { ...post };
@@ -377,23 +393,31 @@
 		formData.append("price", newPost.value.price);
 		formData.append("image", newPost.value.image);
 		formData.append("id", postToEdit.value.id);
-
-		try {
-			const response = await axios.post(`/user/editPost`, formData, {
-				headers: {
-					"Content-Type": "multipart/form-data",
-				},
-				withCredentials: true,
-			});
-			toast.success("Post updated successfully", {
+		const price = parseInt(newPost.value.price);
+		if (isNaN(price) || price !== parseFloat(newPost.value.price)) {
+			toast.error("Price must be an integer", {
 				position: toast.POSITION.BOTTOM_RIGHT,
 				theme: "colored",
 			});
-			loadLandlordProfile();
-		} catch (error) {
-			console.error("Error updating post:", error);
-		} finally {
-			editPostModalVisible.value = false;
+			return;
+		} else {
+			try {
+				const response = await axios.post(`/user/editPost`, formData, {
+					headers: {
+						"Content-Type": "multipart/form-data",
+					},
+					withCredentials: true,
+				});
+				toast.success("Post updated successfully", {
+					position: toast.POSITION.BOTTOM_RIGHT,
+					theme: "colored",
+				});
+				loadLandlordProfile();
+			} catch (error) {
+				console.error("Error updating post:", error);
+			} finally {
+				editPostModalVisible.value = false;
+			}
 		}
 	}
 
@@ -477,7 +501,6 @@
 	}
 	function editProfile() {
 		editedProfile.value.userName = userInfo.userName;
-		editedProfile.value.desc = desc.value;
 		editedProfile.value.aboutMe = aboutMe.value;
 		editedProfile.value.photos = ["../assets/img/photo1.jpg", "../assets/img/photo2.jpg", "../assets/img/photo3.jpg"];
 		openEditOverlay();

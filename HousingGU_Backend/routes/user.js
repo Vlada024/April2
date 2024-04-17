@@ -150,6 +150,29 @@ user.get("/user/myprofile/:id", async (req, res) => {
 			where: {
 				id: Id,
 			},
+			select: {
+				id: true,
+				username: true,
+				email: true,
+				aboutMe: true,
+				type: true,
+				createdAt: true,
+				updatedAt: true,
+				phoneNumber: true,
+				admin: true,
+				profilePicture: true,
+				PreferenceFilled: true,
+				apartments: true,
+				Preference: true,
+				chats: true,
+				messages: true,
+				Matched: true,
+				Notification: true,
+				age: true,
+				city: true,
+				nationality: true,
+				gender: true,
+			},
 		});
 
 		const getChat = await prisma.matched.findMany({
@@ -163,8 +186,12 @@ user.get("/user/myprofile/:id", async (req, res) => {
 					select: {
 						id: true,
 						profilePicture: true,
-						desc: true,
+						aboutMe: true,
 						username: true,
+						age: true,
+						nationality: true,
+						gender: true,
+						city: true,
 					},
 				},
 			},
@@ -180,13 +207,13 @@ user.get("/user/myprofile/:id", async (req, res) => {
 					select: {
 						id: true,
 						profilePicture: true,
-						desc: true,
+						aboutMe: true,
 						username: true,
 					},
 				});
 				getChat[i].user.id = MatchRequestTo.id;
 				getChat[i].user.profilePicture = MatchRequestTo.profilePicture;
-				getChat[i].user.desc = MatchRequestTo.desc;
+				getChat[i].user.aboutMe = MatchRequestTo.aboutMe;
 				getChat[i].user.username = MatchRequestTo.username;
 			}
 		}
@@ -201,7 +228,7 @@ user.get("/user/myprofile/:id", async (req, res) => {
 
 user.post("/user/editProfile", upload.single("photo"), async (req, res) => {
 	const request = req.body;
-	const { userName, aboutMe, desc } = request;
+	const { userName, aboutMe, age, nationality, city, gender } = request;
 
 	// Check if the username already exists
 	const existingUser = await prisma.user.findUnique({
@@ -224,16 +251,16 @@ user.post("/user/editProfile", upload.single("photo"), async (req, res) => {
 		}
 	}
 
-	if (!userName || !aboutMe || !desc) {
+	if (!userName || !aboutMe || !age || !nationality || !city || !gender) {
 		if (req.file == undefined) {
-			return res.status(400).send({ response: "error", errorMessage: "Username, About and desc are required fields" });
+			return res.status(400).send({ response: "error", errorMessage: "Username, About, age, nationality, city and gender are required fields" });
 		} else {
 			fs.unlink("./uploads/profilePictures/" + req.file.filename, (err) => {
 				if (err) {
 					console.error("Error deleting file:", err);
 				}
 			});
-			return res.status(400).send({ response: "error", errorMessage: "Username, About and desc are required fields" });
+			return res.status(400).send({ response: "error", errorMessage: "Username, About  are required fields" });
 		}
 	}
 
@@ -245,7 +272,6 @@ user.post("/user/editProfile", upload.single("photo"), async (req, res) => {
 			data: {
 				username: userName,
 				aboutMe: aboutMe,
-				desc: desc,
 			},
 		});
 		return res.status(200).json({ success: true, message: "account updated" });
@@ -269,7 +295,6 @@ user.post("/user/editProfile", upload.single("photo"), async (req, res) => {
 			data: {
 				username: userName,
 				aboutMe: aboutMe,
-				desc: desc,
 				profilePicture: req.file.filename,
 			},
 		});
@@ -303,7 +328,11 @@ user.get("/user/getMatchRequests", async (req, res) => {
 			matchId: request.id,
 			matchRequestTo: request.MatchRequestTo,
 			name: request.user.username,
-			description: request.user.desc,
+			description: request.user.aboutMe,
+			age: request.user.age,
+			nationality: request.user.nationality,
+			gender: request.user.gender,
+			city: request.user.city,
 			image: request.user.profilePicture,
 			matchPercentage: parseInt(request.RequestedByMatchPercentage),
 		}));
@@ -476,7 +505,7 @@ async function getMatchingUsers(userId) {
 					return matched.MatchRequestedBy === user.id || matched.MatchRequestTo === user.id;
 				});
 				if (!isMatched) {
-					return { id: user.id, username: user.username, aboutMe: user.aboutMe, desc: user.desc, profilePicture: user.profilePicture, matchPercentage: matchingPercentage };
+					return { id: user.id, username: user.username, aboutMe: user.aboutMe, age: user.age, city: user.city, gender: user.gender, nationality: user.nationality, profilePicture: user.profilePicture, matchPercentage: matchingPercentage };
 				}
 				return null;
 			})

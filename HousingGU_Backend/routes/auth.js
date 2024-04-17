@@ -47,48 +47,44 @@ const upload = multer({
 auth.post("/signup", authLimiter, upload.single("profilePicture"), async (req, res) => {
 	try {
 		const request = req.body;
-		const { username, email, password, phoneNumber, type, desc, aboutMe } = request;
+		const { username, email, password, phoneNumber, type, aboutMe, age, gender, city, nationality } = request;
+
+		// Check if required fields are provided
 		if (!username || !email || !phoneNumber || req.file == undefined) {
-			return res.status(400).send({ response: "error", errorMessage: "Username, email, and phone number and Profile Picture are required fields" });
+			return res.status(400).send({ response: "error", errorMessage: "Username, email, phone number, and profile picture are required fields" });
 		}
-		if (type == "Roomie") {
-			if (!desc || !aboutMe) {
+
+		// Check if type is Roomie and validate additional fields
+		if (type === "Roomie") {
+			if (!aboutMe || !age || !gender || !city || !nationality) {
 				fs.unlink("./uploads/profilePictures/" + req.file.filename, (err) => {
 					if (err) {
 						console.error("Error deleting file:", err);
 					}
 				});
-				return res.status(400).send({ response: "error", errorMessage: "Username, email, and phone number and file are required fields" });
-			} else {
-				let hashedPassword = await bcrypt.hash(password, saltRounds);
-				const user = await prisma.user.create({
-					data: {
-						username: username,
-						email: email,
-						password: hashedPassword,
-						desc: desc,
-						type: type,
-						aboutMe: aboutMe,
-						phoneNumber: phoneNumber,
-						profilePicture: req.file.filename,
-					},
-				});
+				return res.status(400).send({ response: "error", errorMessage: "All fields are required for Roomie type" });
 			}
-		} else {
-			let hashedPassword = await bcrypt.hash(password, saltRounds);
-			const user = await prisma.user.create({
-				data: {
-					username: username,
-					email: email,
-					password: hashedPassword,
-					type: type,
-					phoneNumber: phoneNumber,
-					profilePicture: req.file.filename,
-					desc: desc,
-					aboutMe: aboutMe,
-				},
-			});
 		}
+
+		// Hash password
+		const hashedPassword = await bcrypt.hash(password, saltRounds);
+
+		// Create user
+		const user = await prisma.user.create({
+			data: {
+				username: username,
+				email: email,
+				password: hashedPassword,
+				type: type,
+				aboutMe: aboutMe,
+				phoneNumber: phoneNumber,
+				profilePicture: req.file.filename,
+				age: parseInt(age),
+				gender: gender,
+				city: city,
+				nationality: nationality,
+			},
+		});
 
 		res.status(200).send({ response: "ok" });
 	} catch (e) {
