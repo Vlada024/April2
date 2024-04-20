@@ -1,14 +1,14 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
-//mysql://user:root@localhost:3306/HousingGU   //for server
-//mysql://root:@localhost:3306/HousingGU //for local
+//  "development": "mysql://root:@localhost:3306/HousingGU",
+	//	"production": "mysql://user:root@localhost:3306/HousingGU"
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "mysql"
-  url      = "mysql://user:root@localhost:3306/HousingGU "
+  url      = "mysql://user:root@localhost:3306/HousingGU"
 }
 
 model User {
@@ -71,8 +71,7 @@ model Message {
 model Apartment {
   id               String @id @default(uuid())
   name             String
-  image            String
-  smallDescription String
+  images           Json?
   fullDescription  String
   location         String
   price            String
@@ -116,6 +115,7 @@ model Notification  {
   title String
   message   String
   createdAt DateTime @default(now())
+  seen Boolean @default(false)
   userId           String
   user    User     @relation( fields: [userId], references: [id])
 }

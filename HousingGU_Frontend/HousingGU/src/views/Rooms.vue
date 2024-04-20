@@ -43,20 +43,23 @@
 					<div v-for="post in paginatedPosts" :key="post.id" class="col-lg-4 col-md-6 col-sm-6 col-6 d-flex justify-content-center py-3">
 						<div class="card text-light sp-card">
 							<div class="position-relative">
-								<img :src="`http://localhost:5555/uploads/postImages/` + post.image" class="card-img-top" alt="Room Image" />
+								<img :src="userInfo.ImageURL + `${post.images[0]}`" class="card-img-top" alt="Room Image" />
 								<div class="badges">
 									<span class="badge bg-secondary">{{ post.location }}</span>
-									<span class="badge bg-primary">${{ post.price }} per month</span>
+									<span class="badge bg-primary">{{ post.price }} per month</span>
 								</div>
 							</div>
 							<div class="card-body d-flex flex-column justify-content-between align-items-start sp-bg-image-card">
 								<div>
 									<p class="card-title text-user-color">{{ post.user.username }}</p>
 									<h3 class="card-title text-black-50 fs-5">{{ post.name }}</h3>
-									<p class="card-text text-muted fs-6">{{ post.smallDescription }}</p>
 								</div>
 								<div class="text-center">
-									<p class="card-text text-muted fs-6">{{ post.fullDescription }}</p>
+									<div class="scrollable-description">
+										<p class="card-text text-muted fs-6">{{ post.fullDescription }}</p>
+									</div>
+
+									<button class="btn btn-primary btn-sm mt-2" @click="openImageModal(post.images)">View Images</button>
 									<button class="btn btn-primary btn-sm mt-2" v-if="userInfo.userId != post.userId" @click="createMatchRequest(post)">Create a chat request</button>
 								</div>
 							</div>
@@ -90,10 +93,7 @@
 					<label for="name">Name</label>
 					<input type="text" class="form-control" id="name" v-model="newPost.name" />
 				</div>
-				<div class="form-group">
-					<label for="smallDescription">Small Description</label>
-					<textarea class="form-control" id="smallDescription" rows="2" v-model="newPost.smallDescription"></textarea>
-				</div>
+
 				<div class="form-group">
 					<label for="fullDescription">Full Description</label>
 					<textarea class="form-control" id="fullDescription" rows="3" v-model="newPost.fullDescription"></textarea>
@@ -118,6 +118,24 @@
 			</form>
 		</div>
 	</div>
+	<div class="modal fade" id="imageModal" tabindex="-1" aria-labelledby="imageModalLabel" aria-hidden="true">
+		<div class="modal-dialog modal-dialog-scrollable">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h5 class="modal-title" id="imageModalLabel">Post Images</h5>
+					<button type="button" class="btn-close" @click="closeImageModal" aria-label="Close"></button>
+				</div>
+				<div class="modal-body">
+					<div class="images-container">
+						<img v-for="image in modalImages" :key="image" :src="userInfo.ImageURL + `${image}`" class="modal-image" alt="Post Image" />
+					</div>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-secondary" @click="closeImageModal">Close</button>
+				</div>
+			</div>
+		</div>
+	</div>
 </template>
 <script setup>
 	import { ref, computed, onMounted } from "vue";
@@ -135,7 +153,6 @@
 	const showAddPostModal = ref(false);
 	const newPost = ref({
 		name: "",
-		smallDescription: "",
 		fullDescription: "",
 		location: "",
 		price: "",
@@ -152,6 +169,23 @@
 	};
 
 	onMounted(fetchPosts);
+	const modalImages = ref([]);
+
+	const openImageModal = (images) => {
+		modalImages.value = images;
+		const modal = document.getElementById("imageModal");
+		modal.classList.add("show");
+		modal.style.display = "block";
+		document.body.classList.add("modal-open");
+	};
+
+	const closeImageModal = () => {
+		modalImages.value = [];
+		const modal = document.getElementById("imageModal");
+		modal.classList.remove("show");
+		modal.style.display = "none";
+		document.body.classList.remove("modal-open");
+	};
 
 	const filteredPosts = computed(() => {
 		let filtered = posts.value.filter((post) => {
@@ -195,7 +229,6 @@
 	async function savePost() {
 		const formData = new FormData();
 		formData.append("name", newPost.value.name);
-		formData.append("smallDescription", newPost.value.smallDescription);
 		formData.append("fullDescription", newPost.value.fullDescription);
 		formData.append("location", newPost.value.location);
 		formData.append("price", newPost.value.price);
@@ -342,5 +375,77 @@
 		.overlay-content {
 			max-width: 90%;
 		}
+	}
+
+	.modal {
+		display: none;
+		position: fixed;
+		z-index: 1050;
+		top: 0;
+		left: 0;
+		width: 100%;
+		height: 100%;
+		overflow: auto;
+		background-color: rgba(0, 0, 0, 0.5);
+	}
+
+	.modal-dialog {
+		position: relative;
+		width: 80%;
+		max-width: 800px;
+		margin: auto;
+		margin-top: 10vh;
+	}
+
+	.modal-content {
+		position: relative;
+		display: flex;
+		flex-direction: column;
+		background-color: #fff;
+		border: 1px solid rgba(0, 0, 0, 0.2);
+		border-radius: 0.3rem;
+		outline: 0;
+	}
+
+	.modal-header {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		padding: 15px;
+		border-bottom: 1px solid #dee2e6;
+		border-top-left-radius: 0.3rem;
+		border-top-right-radius: 0.3rem;
+	}
+
+	.modal-body {
+		position: relative;
+		flex: 1 1 auto;
+		padding: 15px;
+		overflow-y: auto;
+	}
+
+	.modal-footer {
+		display: flex;
+		justify-content: flex-end;
+		padding: 15px;
+		border-top: 1px solid #dee2e6;
+		border-bottom-right-radius: 0.3rem;
+		border-bottom-left-radius: 0.3rem;
+	}
+
+	.images-container {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 10px;
+		justify-content: center;
+	}
+
+	.modal-image {
+		max-width: 100%;
+		height: auto;
+	}
+	.scrollable-description {
+		max-height: 100px;
+		overflow-y: auto;
 	}
 </style>

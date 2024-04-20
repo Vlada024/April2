@@ -3,9 +3,11 @@ const socketIO = require("socket.io");
 const { PrismaClient, Prisma } = require("@prisma/client");
 const prisma = new PrismaClient();
 const server = http.createServer();
+//"http://localhost:5173"
+//http://89.116.167.130/
 const io = socketIO(server, {
 	cors: {
-		origin: "http://localhost:5173",
+		origin: "http://89.116.167.130:5173",
 		methods: ["GET", "POST"],
 		allowedHeaders: ["Content-Type"],
 		credentials: true,
@@ -27,6 +29,11 @@ io.on("connection", (socket) => {
 							MatchRequestedBy: true,
 						},
 					},
+					users: {
+						select: {
+							profilePicture: true,
+						},
+					},
 				},
 			});
 
@@ -43,7 +50,7 @@ io.on("connection", (socket) => {
 						sender: true,
 					},
 				});
-				socket.emit("chat-messages", { chatMessages: messages, chatName: chat.name, RequestedToName: chat.Matched.RequestedToName, RequestedByName: chat.Matched.RequestedByName });
+				socket.emit("chat-messages", { chatMessages: messages, chatName: chat.name, RequestedToName: chat.Matched.RequestedToName, RequestedByName: chat.Matched.RequestedByName, userImages: chat.users });
 			}
 		} catch (error) {
 			console.error("Error joining chat:", error);

@@ -24,7 +24,7 @@
 					</div>
 					<div class="mb-3">
 						<label for="phoneNumber" class="form-label">Phone Number</label>
-						<input type="tel" class="form-control" id="phoneNumber" placeholder="Enter your phone number" v-model="formPhone" @input="validatePhone" :class="{ 'is-invalid': !isPhoneValid }" />
+						<input type="tel" class="form-control" id="phoneNumber" placeholder="1123456789" v-model="formPhone" @input="validatePhone" :class="{ 'is-invalid': !isPhoneValid }" />
 						<div v-if="!isPhoneValid" class="invalid-feedback">Please enter a valid phone number.</div>
 					</div>
 					<div class="mb-3">
@@ -37,22 +37,21 @@
 						<input type="number" class="form-control" id="age" placeholder="Enter your age" v-model="formAge" @input="validateAge" :class="{ 'is-invalid': !isAgeValid }" min="18" max="100" />
 						<div v-if="!isAgeValid" class="invalid-feedback">Age must be between 18 and 100.</div>
 					</div>
-					<div class="mb-3" v-if="selectedUser === 'Roomie'">
+					<div class="mb-3">
 						<label for="gender" class="form-label">Gender</label>
 						<select class="form-select" id="gender" v-model="formGender" @input="validateGender" :class="{ 'is-invalid': !isGenderValid }">
-							<option value="">Select Gender</option>
 							<option value="Male">Male</option>
 							<option value="Female">Female</option>
 							<option value="Other">Other</option>
 						</select>
 						<div v-if="!isGenderValid" class="invalid-feedback">Gender is required.</div>
 					</div>
-					<div class="mb-3" v-if="selectedUser === 'Roomie'">
+					<div class="mb-3" v-if="false">
 						<label for="city" class="form-label">City</label>
 						<input type="text" class="form-control" id="city" placeholder="Enter your city" v-model="formCity" @input="validateCity" :class="{ 'is-invalid': !isCityValid }" />
 						<div v-if="!isCityValid" class="invalid-feedback">City is required.</div>
 					</div>
-					<div class="mb-3" v-if="selectedUser === 'Roomie'">
+					<div class="mb-3" v-if="false">
 						<label for="nationality" class="form-label">Nationality</label>
 						<input type="text" class="form-control" id="nationality" placeholder="Enter your nationality" v-model="formNationality" @input="validateNationality" :class="{ 'is-invalid': !isNationalityValid }" />
 						<div v-if="!isNationalityValid" class="invalid-feedback">Nationality is required.</div>
@@ -98,13 +97,11 @@
 	const selectedUser = ref("Landlord");
 	const formAboutMe = ref("");
 	const formAge = ref("");
-	const formGender = ref("");
-	const formCity = ref("");
-	const formNationality = ref("");
-
+	const formGender = ref("Male");
 	const isUserNameValid = ref(true);
 	const isEmailValid = ref(true);
 	const isPhoneValid = ref(true);
+
 	const isPasswordValid = ref(true);
 	const isAgeValid = ref(true);
 	const isGenderValid = ref(true);
@@ -138,8 +135,6 @@
 		if (selectedUser.value === "Roomie") {
 			registerCred.append("age", formAge.value);
 			registerCred.append("gender", formGender.value);
-			registerCred.append("city", formCity.value);
-			registerCred.append("nationality", formNationality.value);
 		}
 
 		await axios

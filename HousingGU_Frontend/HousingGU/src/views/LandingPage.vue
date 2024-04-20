@@ -9,7 +9,7 @@
 			<div class="row d-sm-flex align-items-center justify-content-between py-1">
 				<img src="../assets/img/home.png" alt="image" class="HeaderImg" />
 				<div class="col-lg-5 col-sm-12">
-					<h1 class="col">HousingGU Platform</h1>
+					<h1 class="col">HousingU Platform</h1>
 					<h3>
 						Find and match your roommate with the desired
 						<span class="typed-text">{{ typeValue }}</span>
@@ -45,16 +45,16 @@
 			</svg>
 		</div>
 		<div class="container pt-5">
-			<h1 class="text-center text-light">HousingGU</h1>
+			<h1 class="text-center text-light">HousingU</h1>
 			<div class="row align-items-center pt-2">
 				<div class="d-flex justify-content-center col-lg-5 col-md-12 mt-lg-0 mt-md-5">
 					<img src="../assets/img/HousingGUAbout_icon.png" class="img-fluid w-75 h-75" />
 				</div>
 
 				<div class="col-lg-7 col-md-12 p-lg-5 mt-5 text-light">
-					<h2>HousingGU</h2>
-					<p>HousingGU is a roommate matching app. It provides a convenient platform for individuals seeking compatible roommates. Whether you're a student, professional, or anyone in need of a roommate, HousingGU offers a reliable and efficient matching system.</p>
-					<p>With HousingGU, you can easily find roommates who share similar interests, lifestyles, and preferences. The platform ensures secure communication and offers a seamless experience for connecting with potential roommates.</p>
+					<h2>HousingU</h2>
+					<p>HousingU is a roommate matching app. It provides a convenient platform for individuals seeking compatible roommates. Whether you're a student, professional, or anyone in need of a roommate, HousingU offers a reliable and efficient matching system.</p>
+					<p>With HousingU, you can easily find roommates who share similar interests, lifestyles, and preferences. The platform ensures secure communication and offers a seamless experience for connecting with potential roommates.</p>
 
 					<a href="#" class="btn btn-primary mt-3">
 						<i class="bi bi-arrow-return-left"></i>

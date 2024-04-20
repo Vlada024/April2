@@ -7,7 +7,7 @@
 			<div v-for="category in displayedCategories" :key="category.id" class="col-lg-4 col-md-6 col-sm-6 col-6 d-flex justify-content-center py-3">
 				<div class="card text-light sp-card">
 					<div class="position-relative">
-						<img :src="`http://localhost:5555/uploads/postImages/` + category.image" class="card-img-top" alt="Room Image" />
+						<img :src="userInfo.ImageURL + category.images[0]" class="card-img-top" alt="Room Image" />
 						<div class="badges">
 							<span class="badge bg-secondary">{{ category.location }}</span>
 							<span class="badge bg-primary">{{ category.price }}</span>
@@ -96,6 +96,8 @@
 	import axios from "axios";
 	import { ref, computed, onMounted } from "vue";
 	import { useRouter, useRoute } from "vue-router";
+	import { userStore } from "../stores/userStore";
+	const userInfo = userStore();
 	const route = useRoute();
 	const router = useRouter();
 	const categories = ref([]); // Initialize categories as an empty array

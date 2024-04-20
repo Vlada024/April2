@@ -31,28 +31,14 @@ const upload = multer({
 
 landlord.post(
 	"/user/createApartmentPost",
-	upload.single("photo"),
+	upload.array("photos", 15), // Allow up to 15 images to be uploaded
 	async (req, res, next) => {
-		const { name, smallDescription, fullDescription, location, price } = req.body;
-		let photo = null;
+		const { name, fullDescription, location, price } = req.body;
 
-		if (!name || !smallDescription || !fullDescription || !location || !price) {
-			if (req.file) {
-				fs.unlink(`uploads/postimages/${req.file.filename}`, (err) => {
-					if (err) {
-						console.error("Error deleting file:", err);
-					}
-				});
-			}
+		// Check if any required fields are missing
+		if (!name || !fullDescription || !location || !price) {
 			return res.status(400).json({ response: "error", errorMessage: "All fields are required" });
 		}
-
-		// Handle the case when no file is uploaded
-		if (!req.file) {
-			return res.status(400).json({ response: "error", errorMessage: "No file uploaded" });
-		}
-
-		photo = req.file.filename;
 
 		// Validate length constraints
 		const nameMinLength = 3;
@@ -64,20 +50,10 @@ landlord.post(
 		const priceMinLength = 3;
 		const priceMaxLength = 20;
 
-		console.log("Name length:", name.length);
-		console.log("Small Description length:", smallDescription.length);
-		console.log("Full Description length:", fullDescription.length);
-		console.log("Location length:", location.length);
-		console.log("Price length:", price.length);
-
 		const lengthErrors = [];
 
 		if (name.length < nameMinLength || name.length > nameMaxLength) {
 			lengthErrors.push(`Name must be between ${nameMinLength} and ${nameMaxLength} characters`);
-		}
-
-		if (smallDescription.length < descriptionMinLength || smallDescription.length > descriptionMaxLength) {
-			lengthErrors.push(`Small Description must be between ${descriptionMinLength} and ${descriptionMaxLength} characters`);
 		}
 
 		if (fullDescription.length < descriptionMinLength || fullDescription.length > descriptionMaxLength) {
@@ -93,36 +69,39 @@ landlord.post(
 		}
 
 		if (lengthErrors.length > 0) {
-			fs.unlink(`uploads/postimages/${req.file.filename}`, (err) => {
-				if (err) {
-					console.error("Error deleting file:", err);
-				}
-			});
 			return res.status(400).json({ errors: lengthErrors });
 		}
 
-		if (!req.user || !req.user.id) {
-			fs.unlink(`uploads/postimages/${req.file.filename}`, (err) => {
-				if (err) {
-					console.error("Error deleting file:", err);
-				}
-			});
-			return res.status(401).json({ response: "error", errorMessage: "Unauthorized" });
+		// Check if any file is uploaded
+		if (!req.files || req.files.length === 0) {
+			return res.status(400).json({ response: "error", errorMessage: "No file uploaded" });
 		}
 
 		try {
+			// Create an array to store image URLs
+			const imageUrls = [];
+
+			// Save each uploaded file to the server and add its URL to the array
+			for (const file of req.files) {
+				const imageUrl = `uploads/postImages/${file.filename}`;
+				imageUrls.push(imageUrl);
+			}
+
+			// Create the apartment with the array of image URLs
 			const newApartment = await prisma.apartment.create({
 				data: {
 					name,
-					image: photo,
-					smallDescription,
+					images: imageUrls,
 					fullDescription,
 					location,
 					price,
 					user: { connect: { id: req.user.id } },
 				},
 			});
+
+			// Create a notification for the uploaded apartment
 			await createNotification("New Post!", "You have created a New Post! with the name: " + name, req.user.id);
+
 			res.status(200).json({ message: "Apartment created successfully", apartment: newApartment });
 		} catch (error) {
 			console.error(error);
@@ -194,10 +173,10 @@ landlord.get("/user/getAllPosts/:userId", async (req, res) => {
 	}
 });
 
-landlord.post("/user/editPost", upload.single("image"), async (req, res) => {
+landlord.post("/user/editPost", upload.array("images", 15), async (req, res) => {
 	try {
 		const postId = req.body.id;
-		const { name, smallDescription, fullDescription, location, price } = req.body;
+		const { name, fullDescription, location, price } = req.body;
 		const lengthErrors = [];
 		// Validate length constraints
 		const nameMinLength = 3;
@@ -210,10 +189,6 @@ landlord.post("/user/editPost", upload.single("image"), async (req, res) => {
 		const priceMaxLength = 20;
 		if (name.length < nameMinLength || name.length > nameMaxLength) {
 			lengthErrors.push(`Name must be between ${nameMinLength} and ${nameMaxLength} characters`);
-		}
-
-		if (smallDescription.length < descriptionMinLength || smallDescription.length > descriptionMaxLength) {
-			lengthErrors.push(`Small Description must be between ${descriptionMinLength} and ${descriptionMaxLength} characters`);
 		}
 
 		if (fullDescription.length < descriptionMinLength || fullDescription.length > descriptionMaxLength) {
@@ -229,57 +204,41 @@ landlord.post("/user/editPost", upload.single("image"), async (req, res) => {
 		}
 
 		if (lengthErrors.length > 0) {
-			if (!name || !smallDescription || !fullDescription || !location || !price) {
-				if (req.file) {
-					fs.unlink(`uploads/postimages/${req.file.filename}`, (err) => {
-						if (err) {
-							console.error("Error deleting file:", err);
-						}
-					});
-				}
-				return res.status(400).json({ response: "error", errorMessage: "All fields are required" });
-			}
-
-			// Handle the case when no file is uploaded
-			if (!req.file) {
-				return res.status(400).json({ response: "error", errorMessage: "No file uploaded" });
-			}
-			fs.unlink(`uploads/postimages/${req.file.filename}`, (err) => {
-				if (err) {
-					console.error("Error deleting file:", err);
-				}
-			});
 			return res.status(400).json({ errors: lengthErrors });
 		}
-		if (!req.file) {
+
+		if (!req.files || req.files.length === 0) {
+			// If no file is uploaded, update the post without changing the image
 			const updatedPost = await prisma.apartment.update({
 				where: { id: postId },
 				data: {
 					name,
-					smallDescription,
 					fullDescription,
 					location,
 					price,
 				},
 			});
-			res.status(200).json({ message: "Post updated successfully", updatedPost });
+			return res.status(200).json({ message: "Post updated successfully", updatedPost });
 		} else {
+			// If files are uploaded, update the post with the new image(s)
+			const imageUrls = req.files.map((file) => `uploads/postimages/${file.filename}`);
 			const updatedPost = await prisma.apartment.update({
 				where: { id: postId },
 				data: {
 					name,
-					smallDescription,
 					fullDescription,
 					location,
 					price,
-					image: req.file.filename,
+					images: {
+						set: imageUrls,
+					},
 				},
 			});
-			res.status(200).json({ message: "Post updated successfully", updatedPost });
+			return res.status(200).json({ message: "Post updated successfully", updatedPost });
 		}
 	} catch (error) {
 		console.error("Error updating post:", error);
-		res.status(500).json({ error: "An error occurred while updating the post" });
+		return res.status(500).json({ error: "An error occurred while updating the post" });
 	}
 });
 

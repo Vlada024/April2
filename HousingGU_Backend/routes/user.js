@@ -5,6 +5,7 @@ const user = express.Router();
 const multer = require("multer");
 const { v4: uuidv4 } = require("uuid");
 const fs = require("fs");
+const path = require("path");
 const storage = multer.diskStorage({
 	destination: (req, file, cb) => {
 		cb(null, "./uploads/profilePictures");
@@ -169,8 +170,6 @@ user.get("/user/myprofile/:id", async (req, res) => {
 				Matched: true,
 				Notification: true,
 				age: true,
-				city: true,
-				nationality: true,
 				gender: true,
 			},
 		});
@@ -189,9 +188,7 @@ user.get("/user/myprofile/:id", async (req, res) => {
 						aboutMe: true,
 						username: true,
 						age: true,
-						nationality: true,
 						gender: true,
-						city: true,
 					},
 				},
 			},
@@ -228,7 +225,7 @@ user.get("/user/myprofile/:id", async (req, res) => {
 
 user.post("/user/editProfile", upload.single("photo"), async (req, res) => {
 	const request = req.body;
-	const { userName, aboutMe, age, nationality, city, gender } = request;
+	const { userName, aboutMe, age, gender } = request;
 
 	// Check if the username already exists
 	const existingUser = await prisma.user.findUnique({
@@ -251,9 +248,9 @@ user.post("/user/editProfile", upload.single("photo"), async (req, res) => {
 		}
 	}
 
-	if (!userName || !aboutMe || !age || !nationality || !city || !gender) {
+	if (!userName || !aboutMe || !age || !gender) {
 		if (req.file == undefined) {
-			return res.status(400).send({ response: "error", errorMessage: "Username, About, age, nationality, city and gender are required fields" });
+			return res.status(400).send({ response: "error", errorMessage: "Username, About, age and gender are required fields" });
 		} else {
 			fs.unlink("./uploads/profilePictures/" + req.file.filename, (err) => {
 				if (err) {
@@ -330,9 +327,7 @@ user.get("/user/getMatchRequests", async (req, res) => {
 			name: request.user.username,
 			description: request.user.aboutMe,
 			age: request.user.age,
-			nationality: request.user.nationality,
 			gender: request.user.gender,
-			city: request.user.city,
 			image: request.user.profilePicture,
 			matchPercentage: parseInt(request.RequestedByMatchPercentage),
 		}));
@@ -505,7 +500,7 @@ async function getMatchingUsers(userId) {
 					return matched.MatchRequestedBy === user.id || matched.MatchRequestTo === user.id;
 				});
 				if (!isMatched) {
-					return { id: user.id, username: user.username, aboutMe: user.aboutMe, age: user.age, city: user.city, gender: user.gender, nationality: user.nationality, profilePicture: user.profilePicture, matchPercentage: matchingPercentage };
+					return { id: user.id, username: user.username, aboutMe: user.aboutMe, age: user.age, gender: user.gender, profilePicture: user.profilePicture, matchPercentage: matchingPercentage };
 				}
 				return null;
 			})
@@ -541,6 +536,52 @@ user.get("/user/getPreferences", async (req, res) => {
 			success: false,
 			message: "Error getting user preferences",
 		});
+	}
+});
+user.get("/user/getPreferences/:userId", async (req, res) => {
+	try {
+		const userId = req.params.userId;
+		const userPreference = await prisma.preference.findUnique({
+			where: {
+				userId: userId,
+			},
+		});
+		if (userPreference) {
+			return res.status(200).json({
+				success: true,
+				preferences: userPreference,
+			});
+		} else {
+			return res.status(404).json({
+				success: false,
+				message: "Preference not found",
+			});
+		}
+	} catch (error) {
+		console.error("Error getting user preferences:", error);
+		return res.status(500).json({
+			success: false,
+			message: "Error getting user preferences",
+		});
+	}
+});
+
+user.post("/notificationSeen", async (req, res) => {
+	try {
+		const { userId } = req.body;
+		const updatedNotifications = await prisma.notification.updateMany({
+			where: {
+				userId,
+				seen: false, // Only update unseen notifications
+			},
+			data: {
+				seen: true,
+			},
+		});
+		res.status(200).json({ success: true });
+	} catch (error) {
+		console.error("Error marking notifications as seen:", error);
+		res.status(500).json({ error: "Failed to mark notifications as seen" });
 	}
 });
 function calculateMatchingPercentage(userPreference, otherUserPreference) {

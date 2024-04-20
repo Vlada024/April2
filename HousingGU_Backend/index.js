@@ -8,18 +8,29 @@ const secretKey = "SAJKDHASJKDHAjsdahnasd!@#!@asdjkabJBAS";
 const jwt = require("jsonwebtoken");
 require("./routes/chating");
 
-//require("./routes/createUsers"); // uncomment to create users
+require("./routes/createUsers"); // will create users if database is empty
+const allowedOrigins = ["http://localhost:5173", "http://89.116.167.130:5173"];
+
 app.use(
 	cors({
-		origin: "http://localhost:5173",
+		origin: function (origin, callback) {
+			// Allow the request if the origin is allowed or it's not specified (like with mobile apps)
+			if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+				callback(null, true);
+			} else {
+				callback(new Error("Not allowed by CORS"));
+			}
+		},
 		credentials: true,
 	})
 );
 app.use("/uploads", express.static("uploads"));
 app.use(express.json()); // makes every HTTP request A JSON Object
 app.use(function (req, res, next) {
-	// security middleware
-	res.setHeader("Access-Control-Allow-Origin", "http://localhost:5173"); //http://192.168.100.2:5173
+	const origin = req.headers.origin;
+	if (allowedOrigins.includes(origin)) {
+		res.setHeader("Access-Control-Allow-Origin", origin);
+	}
 	res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS, PUT, PATCH, DELETE");
 	res.setHeader("Access-Control-Allow-Credentials", "true");
 	res.setHeader("Content-Security-Policy-Report-Only", "default-src 'self'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self'; frame-src 'self'");
@@ -53,7 +64,7 @@ app.listen(port, () => {
 });
 
 app.get("/", (req, res) => {
-	res.send({ response: "ok", Message: "HousingGU home" });
+	res.send({ response: "ok", Message: "HousingU home" });
 });
 
 app.get("/user/checkToken", (req, res) => {

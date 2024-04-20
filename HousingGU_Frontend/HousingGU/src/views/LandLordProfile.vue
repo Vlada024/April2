@@ -28,18 +28,21 @@
 								<div v-for="(post, index) in posts" :key="index" class="card mb-2">
 									<div class="row g-0">
 										<div class="col-md-2">
-											<img :src="'http://localhost:5555/uploads/postImages/' + post.image" alt="Post Image" class="img-fluid rounded-start" />
+											<img :src="userInfo.ImageURL + post.images[0]" alt="Post Image" class="img-fluid rounded-start" />
 										</div>
-										<div class="col-md-8">
+										<div class="col-md-10">
 											<div class="card-body">
 												<h5 class="card-title">{{ post.name }}</h5>
-												<p class="card-text">{{ post.smallDescription }}</p>
+												<div class="images-scroll-container"></div>
 												<p class="card-text">
 													<small class="text-muted">Location: {{ post.location }}</small>
 												</p>
 												<p class="card-text">
 													<small class="text-muted">Price: {{ post.price }}</small>
 												</p>
+												<div class="images-container">
+													<img v-for="(image, imgIndex) in post.images.slice(1)" :src="userInfo.ImageURL + image" alt="Post Image" class="img-fluid rounded-start small-img me-2" :key="imgIndex" />
+												</div>
 												<div class="d-flex justify-content-end">
 													<button class="btn btn-primary btn-sm me-2" @click="showEditPostModal(post)">Edit</button>
 													<button class="btn btn-danger btn-sm" @click="showDeletePostModal(post)">Delete</button>
@@ -59,7 +62,7 @@
 								<div v-for="(request, index) in friendRequests" :key="index" class="card mb-2 friend-request-card">
 									<div class="row g-0 align-items-center">
 										<div class="col-md-4">
-											<img :src="'http://localhost:5555/uploads/profilePictures/' + request.image" alt="Friend Request" class="img-fluid rounded-start friend-request-image" />
+											<img :src="userInfo.ImageURL + 'uploads/profilePictures/' + request.image" alt="Friend Request" class="img-fluid rounded-start friend-request-image" />
 										</div>
 										<div class="col-md-8">
 											<div class="card-body">
@@ -84,7 +87,7 @@
 							<h5 class="card-title">potential tenants</h5>
 							<div class="list-group" style="max-height: 400px; overflow: auto">
 								<button v-for="friend in friends" :key="friend.id" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-									<img :src="'http://localhost:5555/uploads/profilePictures/' + friend.user.profilePicture" alt="Friend Request" class="avatar" />
+									<img :src="userInfo.ImageURL + 'uploads/profilePictures/' + friend.user.profilePicture" alt="Friend Request" class="avatar" />
 									{{ friend.user.username }}
 									<div>
 										<button class="btn btn-primary" @click="goToChat(friend.Chat.id)">Chat</button>
@@ -107,10 +110,7 @@
 					<label for="name">Name</label>
 					<input type="text" class="form-control" id="name" v-model="newPost.name" />
 				</div>
-				<div class="form-group">
-					<label for="smallDescription">Small Description</label>
-					<textarea class="form-control" id="smallDescription" rows="2" v-model="newPost.smallDescription"></textarea>
-				</div>
+
 				<div class="form-group">
 					<label for="fullDescription">Full Description</label>
 					<textarea class="form-control" id="fullDescription" rows="3" v-model="newPost.fullDescription"></textarea>
@@ -124,8 +124,8 @@
 					<input type="text" class="form-control" id="price" v-model="newPost.price" />
 				</div>
 				<div class="form-group">
-					<label for="photo1">Photo:</label>
-					<input type="file" id="photo1" accept="image/*" @change="handleFileUpload" />
+					<label for="photos">Photos:</label>
+					<input type="file" id="photos" accept="image/*" multiple @change="handleMultipleFileUpload" />
 				</div>
 
 				<div class="overlay-buttons">
@@ -155,6 +155,7 @@
 		</div>
 	</div>
 
+	<
 	<div class="modal fade" :class="{ show: editPostModalVisible, 'd-block': editPostModalVisible }" @click.self="editPostModalVisible = false" tabindex="-1" aria-labelledby="editPostModal" aria-hidden="true">
 		<div class="modal-dialog">
 			<div class="modal-content">
@@ -168,10 +169,7 @@
 							<label for="name">Name</label>
 							<input type="text" class="form-control" id="name" v-model="newPost.name" />
 						</div>
-						<div class="form-group">
-							<label for="smallDescription">Small Description</label>
-							<textarea class="form-control" id="smallDescription" rows="2" v-model="newPost.smallDescription"></textarea>
-						</div>
+
 						<div class="form-group">
 							<label for="fullDescription">Full Description</label>
 							<textarea class="form-control" id="fullDescription" rows="3" v-model="newPost.fullDescription"></textarea>
@@ -263,11 +261,10 @@
 	const editPostModalVisible = ref(false);
 	const newPost = ref({
 		name: "",
-		smallDescription: "",
 		fullDescription: "",
 		location: "",
 		price: "",
-		image: null,
+		images: [],
 	});
 	const postToDelete = ref(null);
 	const postToEdit = ref(null);
@@ -281,10 +278,9 @@
 	const posts = ref([
 		{
 			name: "Product 1",
-			smallDescription: "This is a description of Product 1.",
 			location: "New York, NY",
 			price: "$19.99",
-			image: "https://via.placeholder.com/350x200",
+			images: ["https://via.placeholder.com/350x200"],
 		},
 	]);
 
@@ -317,22 +313,28 @@
 			.catch((error) => {
 				console.error("Error fetching posts:", error);
 			});
-		profileImgURL.value = `http://localhost:5555/uploads/profilePictures/` + userInfo.profilePicture;
+		profileImgURL.value = userInfo.ImageURL + `uploads/profilePictures/` + userInfo.profilePicture;
 	}
 
-	function handleFileUpload(event) {
-		const file = event.target.files[0];
-		newPost.value.image = file;
+	function handleMultipleFileUpload(event) {
+		const files = event.target.files;
+
+		newPost.value.images = [];
+
+		for (let i = 0; i < files.length; i++) {
+			newPost.value.images.push(files[i]);
+		}
 	}
 	async function savePost() {
 		const formData = new FormData();
 		formData.append("name", newPost.value.name);
-		formData.append("smallDescription", newPost.value.smallDescription);
 		formData.append("fullDescription", newPost.value.fullDescription);
 		formData.append("location", newPost.value.location);
 		formData.append("price", newPost.value.price);
-		formData.append("photo", newPost.value.image);
-
+		// Append each image file to the formData
+		for (let i = 0; i < newPost.value.images.length; i++) {
+			formData.append("photos", newPost.value.images[i]);
+		}
 		const price = parseInt(newPost.value.price);
 		if (isNaN(price) || price !== parseFloat(newPost.value.price)) {
 			toast.error("Price must be an integer", {
@@ -386,13 +388,19 @@
 
 	async function saveEditedPost() {
 		const formData = new FormData();
+
+		// Append each field of the edited post
 		formData.append("name", newPost.value.name);
-		formData.append("smallDescription", newPost.value.smallDescription);
 		formData.append("fullDescription", newPost.value.fullDescription);
 		formData.append("location", newPost.value.location);
 		formData.append("price", newPost.value.price);
-		formData.append("image", newPost.value.image);
 		formData.append("id", postToEdit.value.id);
+
+		// Append each image file from newPost.value.images
+		for (const file of newPost.value.images) {
+			formData.append("images", file);
+		}
+
 		const price = parseInt(newPost.value.price);
 		if (isNaN(price) || price !== parseFloat(newPost.value.price)) {
 			toast.error("Price must be an integer", {
@@ -675,5 +683,21 @@
 		width: 50px;
 		height: 50px;
 		border-radius: 50%;
+	}
+	.images-scroll-container {
+		overflow-x: auto;
+		white-space: nowrap;
+		margin-top: 10px;
+	}
+
+	.images-container {
+		display: inline-block;
+	}
+
+	.small-img {
+		width: 50px;
+		height: auto;
+		margin-top: 5px;
+		cursor: pointer;
 	}
 </style>

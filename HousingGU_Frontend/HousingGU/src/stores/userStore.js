@@ -14,6 +14,8 @@ export const userStore = defineStore("userStore", () => {
 	const IsPreferenceFilled = ref(false);
 	const type = ref("");
 	const notifications = ref([]);
+	//const ImageURL = "http://localhost:5555/";
+	const ImageURL = "http://89.116.167.130:5555/";
 	setUserFromStorage();
 
 	function setUserInfo(name, isAdminBool, givenEmail, phone, JWTtoken, givenProfilePicturePath, givenUserId, PreferenceFilled, givenType) {
@@ -128,5 +130,5 @@ export const userStore = defineStore("userStore", () => {
 			};
 		}
 	}
-	return { userName, userId, isAdmin, loggedIn, email, phoneNumber, token, profilePicture, IsPreferenceFilled, type, setUserInfo, setUserFromStorage, logOutUser, userInfo, loadNotifications, notifications, loadPreferences };
+	return { userName, userId, isAdmin, loggedIn, email, phoneNumber, token, profilePicture, IsPreferenceFilled, type, setUserInfo, setUserFromStorage, logOutUser, userInfo, loadNotifications, notifications, loadPreferences, ImageURL };
 });

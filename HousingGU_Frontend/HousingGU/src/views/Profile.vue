@@ -14,8 +14,6 @@
 							<div class="mt-3 mb-3">
 								<p><strong>Age:</strong> {{ age }}</p>
 								<p><strong>Gender:</strong> {{ gender }}</p>
-								<p><strong>City:</strong> {{ city }}</p>
-								<p><strong>Nationality:</strong> {{ nationality }}</p>
 							</div>
 						</div>
 					</div>
@@ -38,15 +36,13 @@
 									<div v-for="(request, index) in friendRequests" :key="index" class="card mb-3">
 										<div class="row g-0 align-items-center">
 											<div class="col-2">
-												<img :src="'http://localhost:5555/uploads/profilePictures/' + request.image" alt="Friend Request" class="img-fluid rounded-start" />
+												<img :src="userInfo.ImageURL + 'uploads/profilePictures/' + request.image" alt="Friend Request" class="img-fluid rounded-start" />
 											</div>
 											<div class="col-10">
 												<div class="card-body">
 													<h5 class="card-title">{{ request.name }}</h5>
 													<p class="card-text"><strong>About:</strong> {{ request.description }}</p>
 													<p class="card-text"><strong>Age:</strong> {{ request.age }}</p>
-													<p class="card-text"><strong>Nationality:</strong> {{ request.nationality }}</p>
-													<p class="card-text"><strong>City:</strong> {{ request.city }}</p>
 													<p class="card-text"><strong>Gender:</strong> {{ request.gender }}</p>
 													<div class="d-flex justify-content-between align-items-center">
 														<span class="badge bg-primary">{{ request.matchPercentage }}% Match</span>
@@ -70,11 +66,9 @@
 								<div v-if="friends.length === 0" class="list-group-item disabled">No Matched Roomie</div>
 								<template v-else>
 									<button v-for="friend in friends" :key="friend.id" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-										<img v-if="friend.user.profilePicture" :src="'http://localhost:5555/uploads/profilePictures/' + friend.user.profilePicture" alt="Friend Request" class="avatar" />
+										<img v-if="friend.user.profilePicture" :src="userInfo.ImageURL + 'uploads/profilePictures/' + friend.user.profilePicture" alt="Friend Request" class="avatar" />
 										{{ friend.user.username }}
 										<div v-if="friend.user.age">Age: {{ friend.user.age }}</div>
-										<div v-if="friend.user.nationality">Nationality: {{ friend.user.nationality }}</div>
-										<div v-if="friend.user.city">City: {{ friend.user.city }}</div>
 										<div v-if="friend.user.gender">Gender: {{ friend.user.gender }}</div>
 										<div>
 											<button class="btn btn-primary" @click="goToChat(friend.Chat.id)">Chat</button>
@@ -499,7 +493,7 @@
 					handleStatus401(error);
 				}
 			});
-		profileImgURL.value = `http://localhost:5555/uploads/profilePictures/` + userInfo.profilePicture;
+		profileImgURL.value = userInfo.ImageURL + `uploads/profilePictures/` + userInfo.profilePicture;
 	}
 
 	async function loadFriendRequests() {

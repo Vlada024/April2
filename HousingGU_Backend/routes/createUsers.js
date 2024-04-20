@@ -42,7 +42,7 @@ async function createUserWithPreferences() {
 			username: faker.internet.userName(),
 			email: faker.internet.email(),
 			password: "$2b$10$t9ZiV/XTwl67Ou9ToQn9XOTntDNO.GPQV43.WFamADHC/rNLdu8Ia",
-			aboutMe: faker.lorem.paragraph(),
+			aboutMe: faker.lorem.paragraph(2),
 			type: "Roomie",
 			phoneNumber: faker.phone.number(),
 			admin: false,
@@ -52,8 +52,6 @@ async function createUserWithPreferences() {
 				create: preferences,
 			},
 			age: faker.helpers.arrayElement([18, 22, 25, 22, 24]),
-			city: faker.helpers.arrayElement(["New York", "Los Angeles", "Chicago", "Houston"]),
-			nationality: "American",
 			gender: faker.helpers.arrayElement(["Female", "Male", "other gender"]),
 		},
 	});
@@ -61,12 +59,16 @@ async function createUserWithPreferences() {
 }
 
 async function createMultipleUsersWithPreferences(count) {
-	for (let i = 0; i < count; i++) {
-		await createUserWithPreferences();
+	const userCount = await prisma.user.count();
+	if (userCount === 0) {
+		for (let i = 0; i < count; i++) {
+			await createUserWithPreferences();
+		}
+	} else {
+		console.log(`User table is not empty (${userCount} users found). Skipping user creation.`);
 	}
 }
 
-// Create 30 users with random preferences
 createMultipleUsersWithPreferences(30)
 	.catch((err) => {
 		console.error("Error creating users:", err);

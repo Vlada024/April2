@@ -16,8 +16,11 @@
 						<li class="nav-item" v-if="userInfo.loggedIn == true && userInfo.type == 'Roomie' && userInfo.IsPreferenceFilled == true">
 							<router-link class="nav-link" to="/roomieSearch"><i class="bi bi-search sp-icon"></i> Search for Roomie</router-link>
 						</li>
+						<li class="nav-item" v-if="(userInfo.loggedIn == true && userInfo.type == 'Landlord') || (userInfo.type == 'Roomie' && userInfo.IsPreferenceFilled == true)">
+							<router-link class="nav-link" to="/profile"><i class="bi bi-chat-dots sp-icon"></i> Chat</router-link>
+						</li>
 						<li class="nav-item" v-if="userInfo.loggedIn == true">
-							<router-link class="nav-link" to="/rooms"><i class="bi bi-search sp-icon"></i> Rooms</router-link>
+							<router-link class="nav-link" to="/rooms"><i class="bi bi-houses sp-icon"></i> Rooms</router-link>
 						</li>
 					</ul>
 					<ul class="navbar-nav">
@@ -37,7 +40,7 @@
 						<li class="nav-item" v-if="userInfo.loggedIn == false">
 							<router-link class="nav-link" to="/login"><i class="bi bi-person-fill sp-icon"></i> {{ userInfo.userName }}</router-link>
 						</li>
-						<div class="dropdown" v-if="userInfo.loggedIn == true">
+						<div class="dropdown" v-if="userInfo.loggedIn == true" @click="notificationSeen()">
 							<button class="btn btn-secondary dropdown-toggle position-relative" type="button" id="notificationsDropdown" data-bs-toggle="dropdown" aria-expanded="false">
 								<i class="bi bi-bell sp-icon"></i>
 								<span class="notification-badge" v-if="notificationCount > 0">{{ notificationCount }}</span>
@@ -54,7 +57,7 @@
 										</div>
 									</div>
 								</li>
-								<li v-if="notificationCount === 0" class="notification-card">
+								<li v-if="notifications.length === 0" class="notification-card">
 									<div class="card">
 										<div class="card-body">
 											<p class="card-text">No new notifications</p>
@@ -80,7 +83,8 @@
 	const route = useRoute();
 	const router = useRouter();
 	const notifications = ref([]);
-	const notificationCount = computed(() => notifications.value.length);
+	const notificationsNumber = ref(notifications.value.length);
+	const notificationCount = computed(() => notificationsNumber.value);
 	let intervalId;
 
 	onMounted(async () => {
@@ -103,18 +107,23 @@
 
 	async function loadNotifications() {
 		try {
-			const response = await userInfo.loadNotifications();
-			if (response.success && Array.isArray(response.notifications)) {
-				notifications.value = response.notifications;
-			} else {
-				notifications.value = [];
+			if (userInfo.loggedIn) {
+				const response = await userInfo.loadNotifications();
+				if (response.success && Array.isArray(response.notifications)) {
+					notifications.value = response.notifications;
+					const unseenNotifications = notifications.value.filter((notification) => !notification.seen);
+					notificationsNumber.value = unseenNotifications.length;
+				} else {
+					notifications.value = [];
+					notificationsNumber.value = 0;
+				}
 			}
 		} catch (error) {
 			console.error("Error loading notifications:", error);
 			notifications.value = [];
+			notificationsNumber.value = 0;
 		}
 	}
-
 	function startNotificationPoller() {
 		intervalId = setInterval(loadNotifications, 30000);
 	}
@@ -134,6 +143,23 @@
 		const date = new Date(dateString);
 		return date.toLocaleString();
 	}
+	async function notificationSeen() {
+		notificationsNumber.value = 0;
+		axios
+			.post(
+				"/notificationSeen",
+				{ userId: userInfo.userId },
+				{
+					withCredentials: true,
+				}
+			)
+			.then((response) => {
+				console.log(response.data);
+			})
+			.catch((error) => {
+				console.error("Error:", error);
+			});
+	}
 </script>
 <style scoped>
 	header {
@@ -149,11 +175,15 @@
 	.nav-item {
 		color: #000000;
 		border-radius: 8%;
+		margin-left: 0.5rem;
+		margin-right: 0.5rem;
 	}
 	.notification-dropdown {
 		max-height: 400px;
 		width: 200px;
 		overflow-y: auto;
+		margin-right: 0.5rem;
+		margin-left: 0.5;
 	}
 	.notification-card {
 		padding: 0.5rem;

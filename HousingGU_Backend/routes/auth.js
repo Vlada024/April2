@@ -47,7 +47,7 @@ const upload = multer({
 auth.post("/signup", authLimiter, upload.single("profilePicture"), async (req, res) => {
 	try {
 		const request = req.body;
-		const { username, email, password, phoneNumber, type, aboutMe, age, gender, city, nationality } = request;
+		const { username, email, password, phoneNumber, type, aboutMe, age, gender } = request;
 
 		// Check if required fields are provided
 		if (!username || !email || !phoneNumber || req.file == undefined) {
@@ -56,7 +56,7 @@ auth.post("/signup", authLimiter, upload.single("profilePicture"), async (req, r
 
 		// Check if type is Roomie and validate additional fields
 		if (type === "Roomie") {
-			if (!aboutMe || !age || !gender || !city || !nationality) {
+			if (!aboutMe || !age || !gender) {
 				fs.unlink("./uploads/profilePictures/" + req.file.filename, (err) => {
 					if (err) {
 						console.error("Error deleting file:", err);
@@ -81,8 +81,6 @@ auth.post("/signup", authLimiter, upload.single("profilePicture"), async (req, r
 				profilePicture: req.file.filename,
 				age: parseInt(age),
 				gender: gender,
-				city: city,
-				nationality: nationality,
 			},
 		});
 
