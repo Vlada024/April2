@@ -378,8 +378,6 @@
 		editedProfile.value.userName = userInfo.userName;
 		editedProfile.value.aboutMe = aboutMe.value;
 		editedProfile.value.age = age.value;
-		editedProfile.value.nationality = nationality.value;
-		editedProfile.value.city = city.value;
 		editedProfile.value.gender = gender.value;
 		editedProfile.value.photos = ["../assets/img/photo1.jpg", "../assets/img/photo2.jpg", "../assets/img/photo3.jpg"];
 		openEditOverlay();
