@@ -1,0 +1,27 @@
+{
+  "version": "2.2.0",
+  "summary": {
+    "title": "Sada",
+    "owner": "Dovla",
+    "description": "preferences and requirements. It allows users to register, create profiles, interact through chats, and manage apartment listings. The frontend is developed using Vue.js and JavaScript, while the backend leverages Node.js.\n\nKey Features\nUser Authentication and Management: Users can sign up and log in. The system handles authentication using JSON Web Tokens (JWT) and password hashing with bcrypt for security. There's also functionality for uploading and managing profile pictures with multer.\nPreference-based User Matching: The application includes a system for users to specify roommate preferences (e.g., gender preference, tidiness, smoking habits, etc.). This feature uses random data generation for simulating user preferences, which helps in matching roommates more accurately.\nReal-time Chat: Users can join and participate in real-time chat rooms related to their matched roommates using Socket.IO. This allows for direct communication between potential or current roommates.\nApartment Listings Management: Landlords or users can post, edit, and delete apartment listings. Each listing can include multiple photos and detailed descriptions, managed through file uploads.\nMatch Requests and Notifications: Users can create match requests to initiate connections with potential roommates. The system includes notifications to alert users about new matches, posts, and other relevant activities.\nSecurity Concerns\nLack of SSL/TLS: Not using SSL/TLS (indicated by your mention of not using SSL) is a significant security risk, particularly for an application handling personal and authentication data. It exposes data to interception by malicious parties.\nStatic Secret Key: The secret key for JWT seems to be hardcoded, which could be a security risk if exposed. It should ideally be stored in a secure, configurable environment.",
+    "id": 0
+  },
+  "detail": {
+    "contributors": [],
+    "diagrams": [
+      {
+        "id": 0,
+        "title": "New generic diagram",
+        "diagramType": "Generic",
+        "placeholder": "New generic diagram description",
+        "thumbnail": "./public/content/images/thumbnail.jpg",
+        "version": "2.2.0",
+        "cells": [],
+        "description": "Sada je"
+      }
+    ],
+    "diagramTop": 1,
+    "reviewer": "",
+    "threatTop": 0
+  }
+}
